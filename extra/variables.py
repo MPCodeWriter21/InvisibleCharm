@@ -33,3 +33,16 @@ class Colors:
     BackPink = '\033[105m'
     BackCyan = '\033[106m'
     BackWhite = '\033[107m'
+
+
+banner = rf'''{Colors.Pink}
+  ___            _     _ _     _       ____ _                          
+ |_ _|_ ____   _(_)___(_) |__ | | ___ / ___| |__   __ _ _ __ _ __ ___  
+  | || '_ \ \ / / / __| | '_ \| |/ _ \ |   | '_ \ / _` | '__| '_ ` _ \ 
+  | || | | \ V /| \__ \ | |_) | |  __/ |___| | | | (_| | |  | | | | | |
+ |___|_| |_|\_/ |_|___/_|_.__/|_|\___|\____|_| |_|\__,_|_|  |_| |_| |_|
+
+{Colors.White}Blog    {Colors.Red} :{Colors.Cyan} https://www.{Colors.BCyan}CodeWriter21{Colors.Cyan}.blog.ir
+{Colors.White}Github  {Colors.Red} :{Colors.Cyan} http://www.GitHub.com/{Colors.BCyan}MPCodeWriter21
+{Colors.White}Telegram{Colors.Red} :{Colors.Cyan} https://www.Telegram.me/{Colors.BCyan}CodeWriter21
+'''

@@ -36,6 +36,9 @@ def main():
     parser.add_argument('--quiet', '-q', action='store_true', dest='quiet')
     args = parser.parse_args()
 
+    # Prints banner
+    print(banner)
+
     # Checks for verbose and quiet switches
     if args.verbose:
         verbose()
