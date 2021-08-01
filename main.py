@@ -1,4 +1,6 @@
 #!/usr/bin/python3
+import os
+
 from extra.imports import *
 
 
@@ -60,6 +62,13 @@ def main():
         exit(Colors.Red + " ! Error: Couldn't find source file\n + Source file must be an existing file!")
     if (args.win_embed or args.to_image or args.embed) and not args.destination:
         exit(Colors.Red + " ! Error: You must set destination path for this operation. use: --dest-file/-d")
+
+    if args.destination:
+        # Makes sure that destination directory exists
+        try:
+            os.makedirs(os.path.split(args.destination)[0])
+        except FileExistsError:
+            pass
 
     # Checks the chosen mode
     if args.mode.lower() == 'hide':

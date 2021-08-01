@@ -34,13 +34,11 @@ class Colors:
 
 
 banner = rf'''
-{Colors.BackPink}                         ____ _                          {Colors.Default}
-{Colors.BackPink}                        / ___| |__   __ _ _ __ _ __ ___  {Colors.Default}
-{Colors.BackPink}{Colors.Pink}   I   V   S   B   E   {Colors.Default +
-                                                      Colors.BackPink}| |   | '_ \ / _` | '__| '_ ` _ \ {Colors.Default}
-{Colors.BackPink}{Colors.Pink}     N   I   I   L     {Colors.Default +
-                                                      Colors.BackPink}| |___| | | | (_| | |  | | | | | |{Colors.Default}
-{Colors.BackPink}                        \____|_| |_|\__,_|_|  |_| |_| |_|{Colors.Default}
+{Colors.BackPink + Colors.White}                         ____ _                          {Colors.Default}
+{Colors.BackPink + Colors.White}                        / ___| |__   __ _ _ __ _ __ ___  {Colors.Default}
+{Colors.BackPink + Colors.Pink}   I   V   S   B   E   {Colors.White}| |   | '_ \ / _` | '__| '_ ` _ \ {Colors.Default}
+{Colors.BackPink + Colors.Pink}     N   I   I   L     {Colors.White}| |___| | | | (_| | |  | | | | | |{Colors.Default}
+{Colors.BackPink + Colors.White}                        \____|_| |_|\__,_|_|  |_| |_| |_|{Colors.Default}
 {Colors.Default}
 {Colors.White}Blog    {Colors.Red} :{Colors.Cyan} https://www.{Colors.BCyan}CodeWriter21{Colors.Cyan}.blog.ir
 {Colors.White}Github  {Colors.Red} :{Colors.Cyan} https://www.GitHub.com/{Colors.BCyan}MPCodeWriter21
