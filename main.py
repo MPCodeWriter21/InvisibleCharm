@@ -47,19 +47,23 @@ def main():
 
     # Checks for switches to be suitable
     if not (args.win_embed or args.win_attrib or args.embed or args.to_image):
-        exit(Colors.Red + 'Please choose a function like embed!')
+        exit(Colors.Red + ' ! Error: No operation chosen\n + Please choose an operation like embed!')
     if not is_windows and (args.win_embed or args.win_attribute):
-        exit(Colors.Red + f"You can't use windows-only options in {operating_system}")
+        exit(Colors.Red + f" ! Error: You can't use windows-only options in {operating_system}")
     if args.embed and args.win_embed:
-        exit(Colors.Red + "You can't use embed and win-embed at the same time!")
+        exit(Colors.Red + " ! Error: You can't use embed and win-embed at the same time!")
     if args.to_image and args.embed:
-        exit(Colors.Red + "You can't use embed and to-image at the same time!")
+        exit(Colors.Red + " ! Error: You can't use embed and to-image at the same time!")
     if args.to_image and args.win_embed:
-        exit(Colors.Red + "You can't use win-embed and to-image at the same time!")
-    if not os.path.exists(args.source) or not os.path.isfile(args.source):
-        exit(Colors.Red + 'Source file must be an existing file!')
+        exit(Colors.Red + " ! Error: You can't use win-embed and to-image at the same time!")
+    if not args.source or not os.path.exists(args.source) or not os.path.isfile(args.source):
+        exit(Colors.Red + " ! Error: Couldn't find source file\n + Source file must be an existing file!")
+    if (args.win_embed or args.to_image or args.embed) and not args.destination:
+        exit(Colors.Red + " ! Error: You must set destination path for this operation. use: --dest-file/-d")
 
+    # Checks the chosen mode
     if args.mode.lower() == 'hide':
+        # Checks the chosen operation and calls the suitable function
         if args.win_embed:
             if not args.cover and not os.path.exists(args.destination):
                 printv(Colors.Red + ' ! Warning: ' + Colors.Gray + Colors.BackPink +
@@ -81,8 +85,12 @@ def main():
                        "`to image` operation doesn't use cover file." + Colors.Default)
             to_image(args.source, args.destination, args.delete, args.compress, args.encryption_pass)
         elif args.embed:
+            if not args.cover or not os.path.exists(args.cover) or not os.path.isfile(args.cover):
+                exit(Colors.Red + ' ! Error: Embed operation needs a cover file' +
+                     '\n + Source file must be an existing file!')
             embed(args.source, args.cover, args.destination, args.delete, args.compress, args.encryption_pass)
     elif args.mode.lower() == 'reveal':
+        # Checks the chosen operation and calls the suitable function
         if args.cover:
             printv(Colors.Red + ' ! Warning: ' + Colors.Gray + Colors.BackPink +
                    "`reveal` operations don't use cover file." + Colors.Default)

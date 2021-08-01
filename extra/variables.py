@@ -33,13 +33,15 @@ class Colors:
     BackWhite = '\033[107m'
 
 
-banner = rf'''{Colors.Pink}
-  ___            _     _ _     _       ____ _                          
- |_ _|_ ____   _(_)___(_) |__ | | ___ / ___| |__   __ _ _ __ _ __ ___  
-  | || '_ \ \ / / / __| | '_ \| |/ _ \ |   | '_ \ / _` | '__| '_ ` _ \ 
-  | || | | \ V /| \__ \ | |_) | |  __/ |___| | | | (_| | |  | | | | | |
- |___|_| |_|\_/ |_|___/_|_.__/|_|\___|\____|_| |_|\__,_|_|  |_| |_| |_|
-
+banner = rf'''
+{Colors.BackPink}                         ____ _                          {Colors.Default}
+{Colors.BackPink}                        / ___| |__   __ _ _ __ _ __ ___  {Colors.Default}
+{Colors.BackPink}{Colors.Pink}   I   V   S   B   E   {Colors.Default +
+                                                      Colors.BackPink}| |   | '_ \ / _` | '__| '_ ` _ \ {Colors.Default}
+{Colors.BackPink}{Colors.Pink}     N   I   I   L     {Colors.Default +
+                                                      Colors.BackPink}| |___| | | | (_| | |  | | | | | |{Colors.Default}
+{Colors.BackPink}                        \____|_| |_|\__,_|_|  |_| |_| |_|{Colors.Default}
+{Colors.Default}
 {Colors.White}Blog    {Colors.Red} :{Colors.Cyan} https://www.{Colors.BCyan}CodeWriter21{Colors.Cyan}.blog.ir
 {Colors.White}Github  {Colors.Red} :{Colors.Cyan} https://www.GitHub.com/{Colors.BCyan}MPCodeWriter21
 {Colors.White}Telegram{Colors.Red} :{Colors.Cyan} https://www.Telegram.me/{Colors.BCyan}CodeWriter21
