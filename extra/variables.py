@@ -2,12 +2,10 @@
 
 import platform
 
-__all__ = ['is_windows', 'Colors', 'operating_system', 'verbose', 'quiet', 'embed_capable']
+__all__ = ['is_windows', 'Colors', 'operating_system', 'embed_capable', 'banner']
 
 operating_system = platform.system()
 is_windows = 'windows' in operating_system.lower()
-verbose = False
-quiet = False
 
 embed_capable = ['PDF document', 'Matroska data', 'Microsoft ASF', 'PNG image', 'MP4 Base Media', 'JPEG image']
 
@@ -43,6 +41,6 @@ banner = rf'''{Colors.Pink}
  |___|_| |_|\_/ |_|___/_|_.__/|_|\___|\____|_| |_|\__,_|_|  |_| |_| |_|
 
 {Colors.White}Blog    {Colors.Red} :{Colors.Cyan} https://www.{Colors.BCyan}CodeWriter21{Colors.Cyan}.blog.ir
-{Colors.White}Github  {Colors.Red} :{Colors.Cyan} http://www.GitHub.com/{Colors.BCyan}MPCodeWriter21
+{Colors.White}Github  {Colors.Red} :{Colors.Cyan} https://www.GitHub.com/{Colors.BCyan}MPCodeWriter21
 {Colors.White}Telegram{Colors.Red} :{Colors.Cyan} https://www.Telegram.me/{Colors.BCyan}CodeWriter21
 '''

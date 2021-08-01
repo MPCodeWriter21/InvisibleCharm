@@ -64,14 +64,7 @@ def main():
             if not args.cover and not os.path.exists(args.destination):
                 printv(Colors.Red + ' ! Warning: ' + Colors.Gray + Colors.BackPink +
                        'You could add a cover file using --cover-file/-c switches.' + Colors.Default)
-            default_name = os.path.split(args.source)[1]
-            name = input(Colors.Yellow + f'Enter a name for embedded file' + Colors.White +
-                         f'({Colors.Pink}Default{Colors.Red}: {Colors.Cyan}{default_name}{Colors.White}){Colors.Red}: '
-                         + Colors.Green)
-            if not name:
-                name = default_name
-            win_embed(name, args.source, args.destination, args.delete, args.compress, args.cover,
-                      args.encryption_pass)
+            win_embed(args.source, args.destination, args.delete, args.compress, args.cover, args.encryption_pass)
             if args.win_attrib:
                 win_attrib_hide(args.destination)
         elif args.win_attrib:
@@ -119,4 +112,4 @@ if __name__ == '__main__':
     try:
         main()
     except KeyboardInterrupt:
-        exit(Colors.Red + ' ! Error: Keyboard Interrupt: User canceled operation')
+        exit('\r' + Colors.Red + ' ! Error: Keyboard Interrupt: User canceled operation')

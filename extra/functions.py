@@ -1,4 +1,5 @@
 # Functions
+
 import os
 import sys
 # We use zlib library to compress and decompress data
@@ -22,11 +23,14 @@ from PIL import Image
 # `is_windows` is a boolean that is True if the operating system is Windows
 # `Colors` is a class that let us access Ansi color codes easily
 # `verbose` and `quiet` are boolean variables
-from .variables import is_windows, Colors, embed_capable, verbose as _verbose, quiet as _quiet
+from .variables import is_windows, Colors, embed_capable
 
 # All of the methods that can be imported
 __all__ = ['print', 'printv', 'input', 'exit', 'win_embed', 'win_extract', 'win_attrib_hide', 'win_attrib_reveal',
            'to_image', 'from_image', 'embed', 'extract', 'quiet', 'verbose']
+
+_verbose = False
+_quiet = False
 
 # Sets write_text function depending on operating system
 ATW = AnsiToWin(sys.stdout)
@@ -36,33 +40,34 @@ else:
     write_text = ATW.write
 
 # Backups input function
-inputbackup = input
+input_backup = input
 
 
 # Colorful print
-def print(*args, end='\n', reset_color: bool = True):
+def print(*args, end='\n', reset_color: bool = True) -> None:
     if _quiet:
         return
     text = ' '.join([str(arg) for arg in args] + [str(end)])
-    if reset_color: text += Colors.Default
+    if reset_color:
+        text += Colors.Default
     if text.startswith('\r'):
         write_text('\r' + ' ' * (os.get_terminal_size()[0] - 1) + '\r')
     write_text(text)
 
 
-def printv(*args, end='\n'):
+def printv(*args, end='\n') -> None:
     if _verbose:
         print(*args, end=end)
 
 
 # Colorful input
-def input(*args, end=''):
+def input(*args, end='') -> str:
     print(*args, end=end)
-    return inputbackup('')
+    return input_backup('')
 
 
 # Exits
-def exit(*args):
+def exit(*args) -> None:
     if args:
         print(*args)
     print(end=Colors.Default)
@@ -70,19 +75,21 @@ def exit(*args):
 
 
 # Enables verbose mode
-def verbose():
+def verbose() -> bool:
     global _verbose
     _verbose = True
+    return _verbose
 
 
 # Enables quiet mode
-def quiet():
+def quiet() -> bool:
     global _quiet
     _quiet = True
+    return _quiet
 
 
 # Encrypts data using AES and costume password
-def encrypt(data: bytes, password: str):
+def encrypt(data: bytes, password: str) -> bytes:
     printv(Colors.Yellow + ' * Hashing password...')
     md5 = hashlib.md5(password.encode()).digest()
     sha512 = hashlib.sha512(password.encode()).digest()
@@ -94,7 +101,7 @@ def encrypt(data: bytes, password: str):
 
 
 # Decrypts data using AES and costume password
-def decrypt(data: bytes, password: str):
+def decrypt(data: bytes, password: str) -> bytes:
     printv(Colors.Yellow + ' * Hashing password...')
     md5 = hashlib.md5(password.encode()).digest()
     sha512 = hashlib.sha512(password.encode()).digest()
@@ -105,40 +112,55 @@ def decrypt(data: bytes, password: str):
     return data
 
 
-def win_embed(name: str, source: str, dest: str, delete_source: bool, compress: bool, cover: str = None,
-              encrypt_pass=None):
-    printv(Colors.Yellow + ' * Copying cover file...', end='')
-    if cover:
-        with open(cover, 'rb') as cover_file:
-            with open(dest, 'wb') as dest_file:
-                dest_file.write(cover_file.read())
-    elif not os.path.exists(dest):
-        with open(dest, 'w') as dest_file:
-            dest_file.write('')
-    printv('\r' + Colors.Green + ' = Cover file copied.')
-    printv(Colors.Yellow + ' * Reading source file...', end='')
-    with open(source, 'rb') as source_file:
-        data = source_file.read()
-    printv('\r' + Colors.Green + ' = Source file opened.')
-    if compress:
-        printv(Colors.Yellow + ' * Compressing data...', end='')
-        data = zlib.compress(data)
-        printv('\r' + Colors.Green + ' = Data compressed.')
-    if encrypt_pass:
-        data = encrypt(data, encrypt_pass)
+# Prepares data(compression and encryption)
+def prepare_data(data: bytes, hiding: bool = True, compress: bool = False, encrypt_pass: str = None) -> bytes:
+    if hiding:
+        if compress:
+            printv(Colors.Yellow + ' * Compressing data...', end='')
+            data = zlib.compress(data)
+            printv('\r' + Colors.Green + ' = Data compressed.')
+        if encrypt_pass:
+            data = encrypt(data, encrypt_pass)
+    else:
+        if encrypt_pass:
+            data = decrypt(data, encrypt_pass)
+        if compress:
+            printv(Colors.Yellow + ' * Trying to decompress data...', end='')
+            try:
+                data = zlib.decompress(data)
+                printv('\r' + Colors.Green + ' = Data decompressed.')
+            except zlib.error:
+                exit('\r' + Colors.Red +
+                     " ! Error: Couldn't decompress!\n + Data may not be compressed or may be encrypted.")
+    return data
 
+
+# Opens a file and returns prepared content
+def open_file(path: str, name: str, hiding: bool = True, compress: bool = False, encrypt_pass: str = None) -> bytes:
+    printv(Colors.Yellow + f' * Reading {name.lower()} file...', end='')
+    with open(path, 'rb') as file:
+        data = file.read()
+    printv('\r' + Colors.Green + f' = {name.capitalize()} file opened.')
+    return prepare_data(data, hiding, compress, encrypt_pass)
+
+
+# Writes data in the given path
+def save_file(path: str, data: bytes) -> None:
     printv(Colors.Yellow + ' * Writing in destination file...', end='')
-    with open(dest + ':' + name, 'wb') as dest_file:
+    with open(path, 'wb') as dest_file:
         dest_file.write(data)
-    print('\r' + Colors.Green + ' = File embedded.')
-
-    if delete_source:
-        printv(Colors.Yellow + ' * Removing source file...')
-        os.remove(source)
-        printv(Colors.Yellow + ' = Source file removed.')
+    print('\r' + Colors.Green + ' = File saved.')
 
 
-def get_names(path: str):
+# Deletes the file in the given path
+def delete_source_file(path: str) -> None:
+    printv(Colors.Yellow + ' * Deleting source file...', end='')
+    os.remove(path)
+    printv('\r' + Colors.Yellow + ' = Source file deleted')
+
+
+# Returns the possible names of the embedded files in a windows path
+def get_names(path: str) -> list:
     output = getoutput('dir ' + os.path.split(path)[0] + ' /r /a')
     names = []
     for line in output.split('\n'):
@@ -148,7 +170,63 @@ def get_names(path: str):
     return names
 
 
-def win_extract(source: str, dest: str, delete_source: bool, compress: bool, encrypt_pass=None):
+# Adds a numeric identifier
+def add_num(name: str):
+    n = ''
+    extension = ''
+    if len(name) > 1 and '.' in name[1:]:
+        extension = name[name.rfind('.'):]
+        name = name[:-1 * len(extension)]
+    while len(name) > 0 and name[-1].isdigit():
+        n = name[-1] + n
+        name = name[:-1]
+    if not n:
+        n = 0
+    else:
+        n = int(n)
+    n += 1
+    return name + str(n) + extension
+
+
+def win_embed(source: str, dest: str, delete_source: bool, compress: bool, cover: str = None,
+              encrypt_pass=None) -> None:
+    names = get_names(dest)
+    default_name = os.path.split(source)[1]
+    while default_name in names:
+        default_name = add_num(default_name)
+    while True:
+        name = input(Colors.Yellow + f' * Enter a name for embedded file' + Colors.White +
+                     f'({Colors.Pink}Default{Colors.Red}: {Colors.Cyan}{default_name}{Colors.White}){Colors.Red}: '
+                     + Colors.Green)
+        if name in names:
+            conform = input(Colors.Yellow + f' * `{Colors.Cyan}{default_name}{Colors.Yellow}` already exists!' +
+                            '\n * Do you want to replace it?' +
+                            f'{Colors.White}({Colors.Red}y{Colors.White}/{Colors.Green}N{Colors.White}) ' +
+                            Colors.Green).lower()
+            if conform == 'n':
+                continue
+        break
+    if not name:
+        name = default_name
+    printv(Colors.Yellow + ' * Preparing path...', end='')
+    if cover:
+        with open(cover, 'rb') as cover_file:
+            with open(dest, 'wb') as dest_file:
+                dest_file.write(cover_file.read())
+    elif not os.path.exists(dest):
+        with open(dest, 'w') as dest_file:
+            dest_file.write('')
+    printv('\r' + Colors.Green + ' = File is ready.')
+
+    data = open_file(source, 'source', True, compress, encrypt_pass)
+
+    save_file(dest + ':' + name, data)
+
+    if delete_source:
+        delete_source_file(source)
+
+
+def win_extract(source: str, dest: str, delete_source: bool, compress: bool, encrypt_pass=None) -> None:
     possible_names = get_names(source)
     name = ''
     if len(possible_names) == 0:
@@ -157,69 +235,45 @@ def win_extract(source: str, dest: str, delete_source: bool, compress: bool, enc
         name = possible_names[0]
     else:
         while name not in possible_names:
-            print(
-                Colors.Blue + 'Available names' + Colors.Red + ': ' + Colors.Green + f'{Colors.Red}, {Colors.Green}'.join(
-                    possible_names))
+            print(Colors.Blue + 'Available names' + Colors.Red + ': ' + Colors.Green +
+                  f'{Colors.Red}, {Colors.Green}'.join(possible_names))
             name = input(Colors.Yellow + f'Enter the name of embedded file' + Colors.Red + ': ' + Colors.Green)
-    printv(Colors.Yellow + ' * Reading source file...', end='')
-    with open(source + ':' + name, 'rb') as source_file:
-        data = source_file.read()
-    printv('\r' + Colors.Green + ' = Source file opened.')
-    if encrypt_pass:
-        data = decrypt(data, encrypt_pass)
-    if compress:
-        printv(Colors.Yellow + ' * Trying to decompress data...', end='')
-        try:
-            data = zlib.decompress(data)
-            printv('\r' + Colors.Green + ' = Data decompressed.')
-        except zlib.error:
-            exit('\r' + Colors.Red +
-                 " ! Error: Couldn't decompress!\n + Data may not be compressed or may be encrypted.")
 
-    printv(Colors.Yellow + ' * Writing in destination file...', end='')
-    with open(dest, 'wb') as dest_file:
-        dest_file.write(data)
-    print('\r' + Colors.Green + ' = Revealed.')
+    data = open_file(source + ':' + name, 'source', False, compress, encrypt_pass)
+
+    save_file(dest, data)
 
     if delete_source:
-        printv(Colors.Yellow + ' * Removing source file...', end='')
-        os.remove(source)
-        printv('\r' + Colors.Yellow + ' = Source file removed.')
+        delete_source_file(source)
 
 
-def win_attrib_hide(path: str):
+def win_attrib_hide(path: str) -> None:
     print(Colors.Yellow + ' * Running `attrib` command...', end='')
     os.system('attrib +h -a +s "' + path + '"')
     print('\r' + Colors.Green + ' = Done.')
 
 
-def win_attrib_reveal(path: str):
+def win_attrib_reveal(path: str) -> None:
     print(Colors.Yellow + ' * Running `attrib` command...', end='')
     os.system('attrib -h +a -s "' + path + '"')
     print('\r' + Colors.Green + ' = Done.')
 
 
-def vmm(n: int):
-    ns = []
-    for i in range(2, int(n ** 0.5)):
+def vm(n: int) -> int:
+    sqrt = n ** 0.5
+    if sqrt.is_integer():
+        return int(sqrt)
+    items = list(range(2, int(sqrt)))
+    items.reverse()
+    for i in items:
         if n % i == 0:
-            ns.append(i)
-    if len(ns) == 0:
-        return 0
-    return ns[-1]
+            return i
+    return 0
 
 
-def to_image(source: str, dest: str, delete_source: bool, compress: bool, encrypt_pass=None):
-    printv(Colors.Yellow + ' * Reading source file...', end='')
-    with open(source, 'rb') as source_file:
-        data = source_file.read()
-    printv('\r' + Colors.Green + ' = Source file opened.')
-    if compress:
-        printv(Colors.Yellow + ' * Compressing data...', end='')
-        data = zlib.compress(data)
-        printv('\r' + Colors.Green + ' = Data compressed.')
-    if encrypt_pass:
-        data = encrypt(data, encrypt_pass)
+def to_image(source: str, dest: str, delete_source: bool, compress: bool, encrypt_pass=None) -> None:
+    data = open_file(source, 'source', True, compress, encrypt_pass)
+
     printv(Colors.Yellow + ' * Calculating image size...', end='')
     while True:
         length = len(data)
@@ -227,10 +281,10 @@ def to_image(source: str, dest: str, delete_source: bool, compress: bool, encryp
             data += b'\x00'
             continue
         length /= 4
-        if vmm(length) == 0:
+        if vm(length) == 0:
             data += b'\x00'
             continue
-        p2 = vmm(length)
+        p2 = vm(length)
         p1 = length // p2
         tmp1 = min(p1, p2)
         tmp2 = max(p1, p2)
@@ -256,12 +310,10 @@ def to_image(source: str, dest: str, delete_source: bool, compress: bool, encryp
     print(Colors.Green + ' = Image saved.')
 
     if delete_source:
-        printv(Colors.Yellow + ' * Deleting source file...', end='')
-        os.remove(source)
-        printv('\r' + Colors.Yellow + ' = Source file deleted')
+        delete_source_file(source)
 
 
-def from_image(source: str, dest: str, delete_source: bool, compress: bool, encrypt_pass=None):
+def from_image(source: str, dest: str, delete_source: bool, compress: bool, encrypt_pass=None) -> None:
     printv(Colors.Yellow + ' * Opening image...', end='')
     image = Image.open(source)
     printv('\r' + Colors.Green + ' = Image opened.')
@@ -275,7 +327,7 @@ def from_image(source: str, dest: str, delete_source: bool, compress: bool, encr
                 tmp += pixel_map[i, j][0].to_bytes(1, 'little') + pixel_map[i, j][1].to_bytes(1, 'little') + \
                        pixel_map[i, j][2].to_bytes(1, 'little') + pixel_map[i, j][3].to_bytes(1, 'little')
             data += tmp
-            printv('\r' + Colors.Yellow + f' * Reading pixels({(i/image.width*10000)//1/100}%)...', end='')
+            printv('\r' + Colors.Yellow + f' * Reading pixels({(i / image.width * 10000) // 1 / 100}%)...', end='')
     except IndexError:
         exit('\r' + Colors.Red +
              " ! Error: Source image doesn't have ALFA!\n + Image may be compressed by a messaging application.")
@@ -287,52 +339,30 @@ def from_image(source: str, dest: str, delete_source: bool, compress: bool, encr
         data = data[:-1]
     printv('\r' + Colors.Green + ' = Data is ready.')
 
-    if encrypt_pass:
-        data = decrypt(data, encrypt_pass)
-    if compress:
-        printv(Colors.Yellow + ' * Trying to decompress data...', end='')
-        try:
-            data = zlib.decompress(data)
-            printv('\r' + Colors.Green + ' = Data decompressed.')
-        except zlib.error:
-            exit('\r' + Colors.Red +
-                 " ! Error: Couldn't decompress!\n + Data may not be compressed or may be encrypted.")
-    printv(Colors.Yellow + ' * Saving data...', end='')
-    with open(dest, 'wb') as dest_file:
-        dest_file.write(data)
-    print('\r' + Colors.Green + ' = Data saved.')
+    data = prepare_data(data, False, compress, encrypt_pass)
+
+    save_file(dest, data)
 
     if delete_source:
-        printv(Colors.Yellow + ' * Deleting source file...', end='')
-        os.remove(source)
-        printv('\r' + Colors.Yellow + ' = Source file deleted')
+        delete_source_file(source)
 
 
-def embed(source: str, cover: str, dest: str, delete_source: bool, compress: bool, encrypt_pass=None):
-    printv(Colors.Yellow + ' * Reading cover file...', end='')
-    with open(cover, 'rb') as cover_file:
-        data = cover_file.read()
-    printv('\r' + Colors.Green + ' = Cover file opened.')
+def embed(source: str, cover: str, dest: str, delete_source: bool, compress: bool, encrypt_pass=None) -> None:
+    data = open_file(cover, 'cover')
     printv(Colors.Yellow + ' * Checking cover file type...', end='')
-    cover_type = magic.from_buffer(data)
-    valid = False
-    for t in embed_capable:
-        if t.lower() in cover_type.lower():
-            valid = True
+    try:
+        cover_type = magic.from_buffer(data)
+        valid = False
+        for t in embed_capable:
+            if t.lower() in cover_type.lower():
+                valid = True
+    except magic.magic.MagicException:
+        valid = True
     if not valid:
         exit('\r' + Colors.Red + " ! Error: Cover File Type(" + cover_type + ") is not supported!")
     printv('\r' + Colors.Green + ' = Cover file is valid.')
-    printv(Colors.Yellow + ' * Reading source file...', end='')
-    with open(source, 'rb') as source_file:
-        source_data = source_file.read()
-    printv('\r' + Colors.Green + ' = Source file opened.')
 
-    if compress:
-        printv(Colors.Yellow + ' * Compressing data...', end='')
-        source_data = zlib.compress(source_data)
-        printv('\r' + Colors.Green + ' = Data compressed.')
-    if encrypt_pass:
-        source_data = encrypt(source_data, encrypt_pass)
+    source_data = open_file(source, 'source', True, compress, encrypt_pass)
 
     printv(Colors.Yellow + ' * Making an archive...', end='')
     archive_tmp_path = str(uuid4()) + 'tmp.zip'
@@ -351,41 +381,23 @@ def embed(source: str, cover: str, dest: str, delete_source: bool, compress: boo
     os.remove(archive_tmp_path)
     printv('\r' + Colors.Green + ' = Temp file removed.')
 
-    printv(Colors.Yellow + ' * Writing in destination...', end='')
-    with open(dest, 'wb') as dest_file:
-        dest_file.write(data)
-    print('\r' + Colors.Green + ' = File saved.')
+    save_file(dest, data)
 
     if delete_source:
-        printv(Colors.Yellow + ' * Deleting source file...', end='')
-        os.remove(source)
-        printv('\r' + Colors.Yellow + ' = Source file deleted')
+        delete_source_file(source)
 
 
-def extract(source: str, dest: str, delete_source: bool, compress: bool, encrypt_pass=None):
+def extract(source: str, dest: str, delete_source: bool, compress: bool, encrypt_pass=None) -> None:
     printv(Colors.Yellow + ' * Opening file...', end='')
     archive = zipfile.ZipFile(source)
     with archive.open(archive.filelist[0], 'r') as source_file:
         data = source_file.read()
+    archive.close()
     printv('\r' + Colors.Green + ' = Source file opened.')
 
-    if encrypt_pass:
-        data = decrypt(data, encrypt_pass)
-    if compress:
-        printv(Colors.Yellow + ' * Trying to decompress data...', end='')
-        try:
-            data = zlib.decompress(data)
-            printv('\r' + Colors.Green + ' = Data decompressed.')
-        except zlib.error:
-            exit('\r' + Colors.Red +
-                 " ! Error: Couldn't decompress!\n + Data may not be compressed or may be encrypted.")
+    data = prepare_data(data, False, compress, encrypt_pass)
 
-    printv(Colors.Yellow + ' * Writing in destination...', end='')
-    with open(dest, 'wb') as dest_file:
-        dest_file.write(data)
-    print('\r' + Colors.Green + ' = File saved.')
+    save_file(dest, data)
 
     if delete_source:
-        printv(Colors.Yellow + ' * Deleting source file...', end='')
-        os.remove(source)
-        printv('\r' + Colors.Yellow + ' = Source file deleted')
+        delete_source_file(source)

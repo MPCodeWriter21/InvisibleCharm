@@ -1,6 +1,6 @@
 # InvisibleCharm
 
-*InvisibleCharm* is a python script that allows you to hide your files.
+**InvisibleCharm** is a python script that allows you to hide your files.
 
 ## Installation
 
@@ -9,41 +9,46 @@ In order to use this script you'll need to install some packages and Python libr
 ### Installing Python
 
 Linux:
-> apt-get install python
-
+```sh
+apt-get install python
+```
 Windows:
 > Get the latest version from [python.org](https://www.python.org)
 
 ### Installing pip
 
-> Download the get-pip Python file: [get-pip.py](https://bootstrap.pypa.io/get-pip.py)
-
-> python get-pip.py
-
+Download the get-pip Python file [get-pip.py](https://bootstrap.pypa.io/get-pip.py) then run it:
+```sh
+python get-pip.py
+```
 ### Installing required libraries with pip
 
 ### Automatically
 You can enter command bellow or install libraries manually
-
-> pip3 install -r requirements.txt
-
+```sh
+pip3 install -r requirements.txt
+```
 ### Manually
 
 #### colorama
 We use [*colorama*](https://github.com/tartley/colorama) library to write colorful texts in windows console.
-> pip3 install colorama
-
+```sh
+pip3 install colorama
+```
 #### python-magic
 We use [*python-magic*](https://github.com/ahupp/python-magic#installation) to check compatible file types for embedding.
-> pip install python-magic
-
+```sh
+pip install python-magic
+```
 Windows:
-> pip install python-magic-bin
-
+```sh
+pip install python-magic-bin
+```
 #### PyCryptodome
 We use [*PyCryptodome*](https://github.com/Legrandin/pycryptodome) for encryption.
-> pip install pycryptodome
-
+```sh
+pip install pycryptodome
+```
 ## Usage
 ```
 usage: main.py [-h] [--win-embed] [--win-attribute] [--embed] [--to-image] --source-file SOURCE
