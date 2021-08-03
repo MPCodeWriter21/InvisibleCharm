@@ -204,11 +204,11 @@ def win_embed(source: str, dest: str, delete_source: bool, compress: bool, cover
                      + Colors.Green)
         if name in names:
             # Makes sure that user wants to replace the existing file
-            conform = input(Colors.Yellow + f' * `{Colors.Cyan}{default_name}{Colors.Yellow}` already exists!' +
+            confirm = input(Colors.Yellow + f' * `{Colors.Cyan}{default_name}{Colors.Yellow}` already exists!' +
                             '\n * Do you want to replace it?' +
                             f'{Colors.White}({Colors.Red}y{Colors.White}/{Colors.Green}N{Colors.White}) ' +
                             Colors.Green).lower()
-            if conform == 'n':
+            if confirm == 'n':
                 continue
         break
     # Sets name to default_name value
@@ -410,7 +410,14 @@ def embed(source: str, cover: str, dest: str, delete_source: bool, compress: boo
             if t.lower() in cover_type.lower():
                 valid = True
     except magic.magic.MagicException:
-        valid = True
+        confirm = input(Colors.Red + f" ! Error: Couldn't identify file type!\n" + Colors.Yellow +
+                        ' * Do you still want to use this cover file?' + Colors.White + '(' + Colors.Yellow +
+                        f'Enter {Colors.Pink}Y{Colors.Yellow} to confirm{Colors.White}){Colors.Red}: '
+                        + Colors.Green).lower()
+        if confirm == 'y':
+            valid = True
+        else:
+            exit()
     if not valid:
         exit('\r' + Colors.Red + " ! Error: Cover File Type(" + cover_type + ") is not supported!")
     printv('\r' + Colors.Green + ' = Cover file is valid.')

@@ -7,7 +7,8 @@ __all__ = ['is_windows', 'Colors', 'operating_system', 'embed_capable', 'banner'
 operating_system = platform.system()
 is_windows = 'windows' in operating_system.lower()
 
-embed_capable = ['PDF document', 'Matroska data', 'Microsoft ASF', 'PNG image', 'MP4 Base Media', 'JPEG image']
+embed_capable = ['PDF document', 'Matroska data', 'Microsoft ASF', 'PNG image', 'ISO Media', 'JPEG image',
+                 'Audio file with ID3']
 
 
 # Colors
