@@ -278,7 +278,7 @@ def win_attrib_hide(path: str) -> None:
     print('\r' + Colors.Green + ' = Done.')
 
 
-# Changes a file windows attributes to be shown ib=n windows explorer
+# Changes a file windows attributes to be shown in windows explorer
 def win_attrib_reveal(path: str) -> None:
     print(Colors.Yellow + ' * Running `attrib` command...', end='')
     # Runs Windows attrib command
@@ -301,19 +301,15 @@ def vm(n: int) -> int:
     return 0
 
 
-# Convert a file to an image
-def to_image(source: str, dest: str, delete_source: bool, compress: bool, encrypt_pass=None) -> None:
-    # Reads and prepares the source file data
-    data = open_file(source, 'source', True, compress, encrypt_pass)
-
-    printv(Colors.Yellow + ' * Calculating image size...', end='')
-    # Calculates a suitable width and height for image
+# Prepares data and calculate suitable width and height for image
+def calculate_size(data: bytes, mode: int):
+    data += b'\x21'
     while True:
         length = len(data)
-        if length % 4 != 0:
+        if length % mode != 0:
             data += b'\x00'
             continue
-        length /= 4
+        length /= mode
         if vm(length) == 0:
             data += b'\x00'
             continue
@@ -327,19 +323,37 @@ def to_image(source: str, dest: str, delete_source: bool, compress: bool, encryp
             data += b'\x00'
             continue
         break
+    return data, width, height
+
+
+# Convert a file to an image
+def to_image(source: str, dest: str, delete_source: bool, compress: bool, encrypt_pass=None, mode: int = 3) -> None:
+    # Reads and prepares the source file data
+    data = open_file(source, 'source', True, compress, encrypt_pass)
+
+    printv(Colors.Yellow + ' * Calculating image size...', end='')
+    # Calculates a suitable width and height for image
+    data, width, height = calculate_size(data, mode)
     printv('\r' + Colors.Green + ' = Image size calculated.')
 
     # Creates a new empty image
-    image = Image.new('RGBA', (width, height))
+    image = Image.new('RGBA' if mode == 4 else 'RGB', (width, height))
     # Loads image pixel map
     pixel_map = image.load()
     x = 0
     printv(Colors.Yellow + ' * Coloring pixels...', end='')
-    # Stores 4 bytes of data in each pixel of the image
-    for i in range(image.width):
-        for j in range(image.height):
-            pixel_map[i, j] = (data[x], data[x + 1], data[x + 2], data[x + 3])
-            x += 4
+    if mode == 3:
+        # Stores 3 bytes of data in each pixel of the image
+        for i in range(image.width):
+            for j in range(image.height):
+                pixel_map[i, j] = (data[x], data[x + 1], data[x + 2])
+                x += 3
+    elif mode == 4:
+        # Stores 4 bytes of data in each pixel of the image
+        for i in range(image.width):
+            for j in range(image.height):
+                pixel_map[i, j] = (data[x], data[x + 1], data[x + 2], data[x + 3])
+                x += 4
     printv('\r' + Colors.Green + ' = Pixels colored.')
 
     # Saves image in the destination path
@@ -351,18 +365,16 @@ def to_image(source: str, dest: str, delete_source: bool, compress: bool, encryp
         delete_source_file(source)
 
 
-# Extract a file from an image pixels
-def from_image(source: str, dest: str, delete_source: bool, compress: bool, encrypt_pass=None) -> None:
-    # Reads the image file
-    printv(Colors.Yellow + ' * Opening image...', end='')
-    image = Image.open(source)
-    printv('\r' + Colors.Green + ' = Image opened.')
-
-    printv(Colors.Yellow + ' * Reading pixels...', end='')
+# Reads pixels and returns data
+def read_pixels(image: Image):
     # Loads image pixel map
     pixel_map = image.load()
+
+    mode = len(pixel_map[0, 0])
+
+    printv(Colors.Yellow + ' * Reading pixels...', end='')
     data = b''
-    try:
+    if mode == 4:
         for i in range(image.width):
             tmp = b''
             for j in range(image.height):
@@ -374,16 +386,38 @@ def from_image(source: str, dest: str, delete_source: bool, compress: bool, encr
             data += tmp
             # Shows the reading progress in console
             print('\r' + Colors.Yellow + f' * Reading pixels({(i / image.width * 10000) // 1 / 100}%)...', end='')
-    except IndexError:
-        exit('\r' + Colors.Red +
-             " ! Error: Source image doesn't have ALFA!\n + Image may be compressed by a messaging application.")
+    elif mode == 3:
+        for i in range(image.width):
+            tmp = b''
+            for j in range(image.height):
+                # Reads a pixel
+                # Appends 3 bytes to the temporarily data
+                tmp += pixel_map[i, j][0].to_bytes(1, 'little') + pixel_map[i, j][1].to_bytes(1, 'little') + \
+                       pixel_map[i, j][2].to_bytes(1, 'little')
+            # Appends the temporarily data to the data
+            data += tmp
+            # Shows the reading progress in console
+            print('\r' + Colors.Yellow + f' * Reading pixels({(i / image.width * 10000) // 1 / 100}%)...', end='')
     print('\r' + Colors.Green + ' = Data loaded.')
 
     printv(Colors.Yellow + ' * Correcting data...', end='')
     # Removes all empty bytes at the end of the data
     while data.endswith(b'\x00'):
         data = data[:-1]
+    data = data[:-1]
     printv('\r' + Colors.Green + ' = Data is ready.')
+    return data
+
+
+# Extract a file from an image pixels
+def from_image(source: str, dest: str, delete_source: bool, compress: bool, encrypt_pass=None) -> None:
+    # Reads the image file
+    printv(Colors.Yellow + ' * Opening image...', end='')
+    image = Image.open(source)
+    printv('\r' + Colors.Green + ' = Image opened.')
+
+    # Reads pixels and returns data
+    data = read_pixels(image)
 
     # Prepares extracted data
     data = prepare_data(data, False, compress, encrypt_pass)

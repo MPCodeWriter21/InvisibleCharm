@@ -22,6 +22,10 @@ def main():
     parser.add_argument('--embed', '-e', action='store_true', dest='embed', help='')
     parser.add_argument('--to-image', '-i', action='store_true', dest='to_image',
                         help=Colors.Green + f'Converts a file into a {Colors.Pink}png image' + Colors.Default)
+    parser.add_argument('--image-mode', '-I', action='store', type=int, dest='image_mode', default=3,
+                        help=f'Sets output image mode.\n' + Colors.Default +
+                             f'Valid values{Colors.Red}:{Colors.Blue} 3{Colors.Red}:{Colors.Blue}RGB' + Colors.Red +
+                             f',{Colors.Blue} 4{Colors.Red}:{Colors.Blue}ARGB' + Colors.Default)
     parser.add_argument('--source-file', '-s', action='store', type=str, dest='source',
                         help=f'Sets the path of {Colors.Green}SOURCE{Colors.Default} file', required=True)
     parser.add_argument('--cover-file', '-c', action='store', type=str, dest='cover',
@@ -62,6 +66,9 @@ def main():
         exit(Colors.Red + " ! Error: Couldn't find source file\n + Source file must be an existing file!")
     if (args.win_embed or args.to_image or args.embed) and not args.destination:
         exit(Colors.Red + " ! Error: You must set destination path for this operation. use: --dest-file/-d")
+    if args.to_image and args.image_mode not in [3, 4]:
+        exit(Colors.Red + f' ! Error: Image Mode: `{Colors.White}{args.image_mode}{Colors.Red}` not found!\n' +
+             f' + Valid values:{Colors.Blue} 3{Colors.Red},{Colors.Blue} 4')
 
     if args.destination:
         # Makes sure that destination directory exists
@@ -92,7 +99,7 @@ def main():
             if args.cover:
                 printv(Colors.Red + ' ! Warning: ' + Colors.Gray + Colors.BackPink +
                        "`to image` operation doesn't use cover file." + Colors.Default)
-            to_image(args.source, args.destination, args.delete, args.compress, args.encryption_pass)
+            to_image(args.source, args.destination, args.delete, args.compress, args.encryption_pass, args.image_mode)
         elif args.embed:
             if not args.cover or not os.path.exists(args.cover) or not os.path.isfile(args.cover):
                 exit(Colors.Red + ' ! Error: Embed operation needs a cover file' +
@@ -122,7 +129,7 @@ def main():
         elif args.embed:
             extract(args.source, args.destination, args.delete, args.compress, args.encryption_pass)
     else:
-        exit(Colors.Red + f'Mode: `{Colors.White}{args.mode}{Colors.Red}` not found!')
+        exit(Colors.Red + f' ! Error: Mode: `{Colors.White}{args.mode}{Colors.Red}` not found!')
 
 
 if __name__ == '__main__':
