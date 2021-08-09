@@ -23,7 +23,7 @@ from PIL import Image
 # `verbose` and `quiet` are boolean variables
 from .variables import is_windows, Colors, embed_capable
 
-# All of the methods that can be imported
+# All the methods
 __all__ = ['print', 'printv', 'input', 'exit', 'win_embed', 'win_extract', 'win_attrib_hide', 'win_attrib_reveal',
            'to_image', 'from_image', 'embed', 'extract', 'quiet', 'verbose']
 
@@ -145,8 +145,17 @@ def open_file(path: str, name: str, hiding: bool = True, compress: bool = False,
 # Writes data in the given path
 def save_file(path: str, data: bytes) -> None:
     printv(Colors.Yellow + ' * Writing in destination file...', end='')
-    with open(path, 'wb') as dest_file:
-        dest_file.write(data)
+    try:
+        with open(path, 'wb') as dest_file:
+            dest_file.write(data)
+    except PermissionError:
+        print('\r' + Colors.Red + ' ! Error: PermissionError: Save in path `' + path + '` failed!')
+        path = add_num(path)
+        while os.path.exists(path):
+            path = add_num(path)
+        with open(path, 'wb') as dest_file:
+            dest_file.write(data)
+        print(Colors.Green + ' = File saved in New Path: ' + path)
     print('\r' + Colors.Green + ' = File saved.')
 
 
@@ -171,7 +180,14 @@ def get_names(path: str) -> list:
 # Adds a numeric identifier
 def add_num(name: str):
     n = ''
+    prefix = ''
     extension = ''
+    if os.sep in name:
+        prefix = name[:name.rfind(os.sep) + 1]
+        name = name[name.rfind(os.sep) + 1:]
+    if ':' in name:
+        prefix += name[:name.rfind(':') + 1]
+        name = name[name.rfind(':') + 1:]
     if len(name) > 1 and '.' in name[1:]:
         extension = name[name.rfind('.'):]
         name = name[:-1 * len(extension)]
@@ -183,10 +199,10 @@ def add_num(name: str):
     else:
         n = int(n)
     n += 1
-    return name + str(n) + extension
+    return prefix + name + str(n) + extension
 
 
-# Hides a file in another windows file
+# Hides a file in another Windows file
 def win_embed(source: str, dest: str, delete_source: bool, compress: bool, cover: str = None,
               encrypt_pass=None) -> None:
     # Gets the list of available embedded names in the destination path
@@ -204,7 +220,7 @@ def win_embed(source: str, dest: str, delete_source: bool, compress: bool, cover
                      + Colors.Green)
         if name in names:
             # Makes sure that user wants to replace the existing file
-            confirm = input(Colors.Yellow + f' * `{Colors.Cyan}{default_name}{Colors.Yellow}` already exists!' +
+            confirm = input(Colors.Yellow + f' * `{Colors.Cyan}{name}{Colors.Yellow}` already exists!' +
                             '\n * Do you want to replace it?' +
                             f'{Colors.White}({Colors.Red}y{Colors.White}/{Colors.Green}N{Colors.White}) ' +
                             Colors.Green).lower()
@@ -267,7 +283,7 @@ def win_extract(source: str, dest: str, delete_source: bool, compress: bool, enc
         delete_source_file(source)
 
 
-# Changes a file windows attributes to not be show in windows explorer
+# Changes a file windows attributes not to be shown in Windows explorer
 def win_attrib_hide(path: str) -> None:
     print(Colors.Yellow + ' * Running `attrib` command...', end='')
     # Runs Windows attrib command
@@ -278,7 +294,7 @@ def win_attrib_hide(path: str) -> None:
     print('\r' + Colors.Green + ' = Done.')
 
 
-# Changes a file windows attributes to be shown in windows explorer
+# Changes a file windows attributes to be shown in Windows explorer
 def win_attrib_reveal(path: str) -> None:
     print(Colors.Yellow + ' * Running `attrib` command...', end='')
     # Runs Windows attrib command
