@@ -53,7 +53,7 @@ def main():
     # Checks for switches to be suitable
     if not (args.win_embed or args.win_attrib or args.embed or args.to_image):
         exit(Colors.Red + ' ! Error: No operation chosen\n + Please choose an operation like embed!')
-    if not is_windows and (args.win_embed or args.win_attribute):
+    if not is_windows and (args.win_embed or args.win_attrib):
         exit(Colors.Red + f" ! Error: You can't use windows-only options in {operating_system}")
     if args.embed and args.win_embed:
         exit(Colors.Red + " ! Error: You can't use embed and win-embed at the same time!")
