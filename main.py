@@ -13,12 +13,11 @@ def main():
     parser.add_argument('mode', action='store', type=str,
                         help=f'{Colors.Blue}modes{Colors.Red}:{Colors.Green} hide{Colors.Red},{Colors.Green} reveal' +
                              Colors.Default)
-    if is_windows:
-        parser.add_argument('--win-embed', '-we', action='store_true', dest='win_embed',
-                            help=f'{Colors.Green}Embed files invisibly{Colors.White}\
+    parser.add_argument('--win-embed', '-we', action='store_true', dest='win_embed',
+                        help=f'{Colors.Green}Embed files invisibly{Colors.White}\
                             ({Colors.Yellow}Only works on Windows{Colors.White})' + Colors.Default)
-        parser.add_argument('--win-attribute', '-wa', action='store_true', dest='win_attrib',
-                            help=Colors.Green + 'Change windows attributes to hide file' + Colors.Default)
+    parser.add_argument('--win-attribute', '-wa', action='store_true', dest='win_attrib',
+                        help=Colors.Green + 'Change windows attributes to hide file' + Colors.Default)
     parser.add_argument('--embed', '-e', action='store_true', dest='embed', help='')
     parser.add_argument('--to-image', '-i', action='store_true', dest='to_image',
                         help=Colors.Green + f'Converts a file into a {Colors.Pink}png image' + Colors.Default)
@@ -73,7 +72,8 @@ def main():
     if args.destination:
         # Makes sure that destination directory exists
         try:
-            os.makedirs(os.path.split(args.destination)[0])
+            if os.path.split(args.destination)[0]:
+                os.makedirs(os.path.split(args.destination)[0])
         except FileExistsError:
             pass
 
