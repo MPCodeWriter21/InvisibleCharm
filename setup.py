@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 # setup.py
-import InvisibleCharm.Settings
+import os
 from setuptools import setup, find_packages
 
 with open('README.md', 'r') as file:
     long_description = file.read()
 
 DESCRIPTION = ''
-VERSION = '2.0.2'
+VERSION = '2.0.3'
 REQUIREMENTS = ['log21', 'Pillow', 'pycryptodome']
-if InvisibleCharm.Settings.is_windows:
+if os.name == 'nt':
     REQUIREMENTS.append('python-magic-bin')
 else:
     REQUIREMENTS.append('python-magic')
