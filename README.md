@@ -104,7 +104,7 @@ InvisibleCharm h --win-attribute -s SOURCEFILEPATH
 InvisibleCharm r -wa -s SOURCEFILEPATH
 ```
 
-![Imgur](https://i.imgur.com/UiKAaKy.gifv)
+![WinAttrib](https://i.imgur.com/UiKAaKy.gif)
 
 About
 -----
