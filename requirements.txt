@@ -1,6 +1,0 @@
-colorama~=0.4.3
-python-magic~=0.4.24
-crypto~=1.4.1
-Pillow~=8.1.2
-pycryptodome
-python-magic-bin

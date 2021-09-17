@@ -1,0 +1,7 @@
+.idea/
+__pycache__/
+build/
+dist/
+InvisibleCharm.egg-info/
+Version 1/
+Images/
