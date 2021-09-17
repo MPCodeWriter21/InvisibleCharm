@@ -6,8 +6,8 @@ from setuptools import setup, find_packages
 with open('README.md', 'r') as file:
     long_description = file.read()
 
-DESCRIPTION = ''
-VERSION = '2.0.3'
+DESCRIPTION = 'InvisibleCharm is a python script that allows you to hide your files.'
+VERSION = '2.0.4'
 REQUIREMENTS = ['log21', 'Pillow', 'pycryptodome']
 if os.name == 'nt':
     REQUIREMENTS.append('python-magic-bin')
@@ -30,7 +30,7 @@ setup(
             'InvisibleCharm = InvisibleCharm:entry_point'
         ]
     },
-    keywords=['python', 'python3', 'CodeWriter21'],
+    keywords=['python', 'python3', 'CodeWriter21', 'Hide', 'Hidden', 'InvisibleCharm', 'Invisible', 'Charm'],
     classifiers=[
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.7",
