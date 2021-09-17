@@ -7,7 +7,7 @@ with open('README.md', 'r') as file:
     long_description = file.read()
 
 DESCRIPTION = ''
-VERSION = '2.0.1'
+VERSION = '2.0.2'
 REQUIREMENTS = ['log21', 'Pillow', 'pycryptodome']
 if InvisibleCharm.Settings.is_windows:
     REQUIREMENTS.append('python-magic-bin')
