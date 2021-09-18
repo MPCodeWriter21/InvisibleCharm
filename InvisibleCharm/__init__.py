@@ -8,7 +8,7 @@ import InvisibleCharm.lib.File as File
 from log21 import get_colors as _gc
 from InvisibleCharm.lib.Console import exit as _exit
 
-__version__ = "2.1.1"
+__version__ = "2.1.2"
 
 
 def entry_point():
