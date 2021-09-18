@@ -8,6 +8,14 @@ Install Python
 
 Inorder to install Python, please visit [Python.org](https://Python.org/).
 
+Changes
+-------
+
+### 2.1.0
+
+Using `Cython`, increased the speed of converting a file to an image and extracting the file from the image.
+
+
 Install InvisibleCharm
 ----------------------
 

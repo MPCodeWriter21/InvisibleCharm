@@ -5,3 +5,4 @@ dist/
 InvisibleCharm.egg-info/
 Version 1/
 Images/
+InvisibleCharm/lib/operations/Image.c

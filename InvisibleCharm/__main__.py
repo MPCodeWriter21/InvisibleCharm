@@ -4,7 +4,7 @@
 
 import os
 from log21 import get_colors as gc
-from InvisibleCharm.lib.Argparse import ArgumentParser
+from log21 import ColorizingArgumentParser
 from InvisibleCharm.Settings import banner, is_windows, operating_system
 from InvisibleCharm.lib.Console import logger, input, verbose, quiet, exit
 from InvisibleCharm.lib.operations import win_embed, win_extract, win_attrib_hide, win_attrib_reveal, to_image, \
@@ -14,7 +14,7 @@ from InvisibleCharm.lib.operations import win_embed, win_extract, win_attrib_hid
 # Main function of script
 def main():
     # Initializes the argument parser
-    parser = ArgumentParser()
+    parser = ColorizingArgumentParser()
 
     # Adds commandline arguments to the parser
     parser.add_argument('mode', action='store', type=str, choices=['hide', 'reveal', 'h', 'r'],

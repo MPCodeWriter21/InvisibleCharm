@@ -1,4 +1,4 @@
-# InvisibleCharm.lib.operations.Image.py
+# InvisibleCharm.lib.operations.Image.pyx
 # CodeWriter21
 
 
@@ -12,22 +12,22 @@ from InvisibleCharm.lib.data.Prepare import prepare_data as _prepare_data
 
 __all__ = ['to_image', 'from_image']
 
-
-def vm(n: int) -> int:
-    sqrt = n ** 0.5
+cdef int vm(int n):
+    cdef float sqrt = n ** 0.5
     if sqrt.is_integer():
         return int(sqrt)
-    items = list(range(2, int(sqrt)))
+    cdef list items = list(range(2, int(sqrt)))
     items.reverse()
+    cdef int i
     for i in items:
         if n % i == 0:
             return i
     return 0
 
-
 # Prepares data and calculate suitable width and height for image
-def calculate_size(data: bytes, mode: int):
+cdef tuple calculate_size(bytes data, int mode):
     data += b'\x21'
+    cdef int length, width, height, tmp1, tmp2
     while True:
         length = len(data)
         if length % mode != 0:
@@ -49,14 +49,14 @@ def calculate_size(data: bytes, mode: int):
         break
     return data, width, height
 
-
 # Convert a file to an image
-def to_image(source: str, dest: str, delete_source: bool, compress: bool, encrypt_pass=None, mode: int = 3) -> None:
+cpdef void to_image(str source, str dest, delete_source, compress, str encrypt_pass=None, int mode=3):
     # Reads and prepares the source file data
-    data = _open_file(source, 'source', True, compress, encrypt_pass)
+    cdef bytes data = _open_file(source, 'source', True, compress, encrypt_pass)
 
     _logger.debug(_gc("ly") + ' * Calculating image size...', end='')
     # Calculates a suitable width and height for image
+    cdef int width, height
     data, width, height = calculate_size(data, mode)
     _logger.debug('\r' + _gc("lg") + ' = Image size calculated.')
 
@@ -66,6 +66,7 @@ def to_image(source: str, dest: str, delete_source: bool, compress: bool, encryp
     pixel_map = image.load()
     x = 0
     _logger.debug(_gc("ly") + ' * Coloring pixels...', end='')
+    cdef int i, j
     if mode == 3:
         # Stores 3 bytes of data in each pixel of the image
         for i in range(image.width):
@@ -88,16 +89,18 @@ def to_image(source: str, dest: str, delete_source: bool, compress: bool, encryp
         # Removes Source file
         _delete_source_file(source)
 
-
 # Reads pixels and returns data
-def read_pixels(image: _Image):
+cpdef read_pixels(image: _Image):
+    _logger.debug(_gc("ly") + ' * Loading pixels...', end='')
     # Loads image pixel map
     pixel_map = image.load()
 
-    mode = len(pixel_map[0, 0])
+    cdef int mode = len(pixel_map[0, 0])
 
-    _logger.debug(_gc("ly") + ' * Reading pixels...', end='')
-    data = b''
+    _logger.debug(_gc("ly") + '\r * Reading pixels...', end='')
+    cdef bytes data = b''
+    cdef bytes tmp = b''
+    cdef int i, j
     if mode == 4:
         for i in range(image.width):
             tmp = b''
@@ -132,16 +135,15 @@ def read_pixels(image: _Image):
     _logger.debug('\r' + _gc("lg") + ' = Data is ready.')
     return data
 
-
 # Extract a file from an image pixels
-def from_image(source: str, dest: str, delete_source: bool, compress: bool, encrypt_pass=None) -> None:
+cpdef void from_image(str source, str dest, delete_source, compress, str encrypt_pass=None):
     # Reads the image file
     _logger.debug(_gc("ly") + ' * Opening image...', end='')
     image = _Image.open(source)
     _logger.debug('\r' + _gc("lg") + ' = Image opened.')
 
     # Reads pixels and returns data
-    data = read_pixels(image)
+    cdef bytes data = read_pixels(image)
 
     # Prepares extracted data
     data = _prepare_data(data, False, compress, encrypt_pass)

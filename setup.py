@@ -2,12 +2,16 @@
 # setup.py
 import os
 from setuptools import setup, find_packages
+from Cython.Build import cythonize
 
 with open('README.md', 'r') as file:
     long_description = file.read()
 
+with open('LICENSE.txt', 'r') as file:
+    LICENSE = file.read()
+
 DESCRIPTION = 'InvisibleCharm is a python script that allows you to hide your files.'
-VERSION = '2.0.4'
+VERSION = '2.1.0'
 REQUIREMENTS = ['log21', 'Pillow', 'pycryptodome']
 if os.name == 'nt':
     REQUIREMENTS.append('python-magic-bin')
@@ -20,6 +24,7 @@ setup(
     url='https://github.com/MPCodeWriter21/InvisibleCharm',
     author='CodeWriter21(Mehrad Pooryoussof)',
     author_email='<CodeWriter21@gmail.com>',
+    license=LICENSE,
     description=DESCRIPTION,
     long_description=long_description,
     long_description_content_type='text/markdown',
@@ -30,6 +35,7 @@ setup(
             'InvisibleCharm = InvisibleCharm:entry_point'
         ]
     },
+    ext_modules=cythonize('InvisibleCharm/lib/operations/Image.pyx'),
     keywords=['python', 'python3', 'CodeWriter21', 'Hide', 'Hidden', 'InvisibleCharm', 'Invisible', 'Charm'],
     classifiers=[
         "Programming Language :: Python :: 3",
