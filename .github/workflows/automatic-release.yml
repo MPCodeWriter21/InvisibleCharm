@@ -22,7 +22,7 @@ jobs:
           pip install setuptools wheel Cython
       - name: Build
         run: |
-          python setup.py bdist_wheel
+          python setup.py sdist bdist_wheel
       - uses: "marvinpinto/action-automatic-releases@latest"
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"

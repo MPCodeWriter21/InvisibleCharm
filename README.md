@@ -15,7 +15,7 @@ Changes
 
 Using `Cython`, increased the speed of converting a file to an image and extracting the file from the image.
 
-### 2.1.1 - 2.1.2
+### 2.1.1 - 2.1.3
 
 Auto release fixed.
 
