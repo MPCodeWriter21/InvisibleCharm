@@ -11,7 +11,7 @@ with open('LICENSE.txt', 'r') as file:
     LICENSE = file.read()
 
 DESCRIPTION = 'InvisibleCharm is a python script that allows you to hide your files.'
-VERSION = '2.1.3'
+VERSION = '2.1.4'
 REQUIREMENTS = ['log21', 'Pillow', 'pycryptodome']
 if os.name == 'nt':
     REQUIREMENTS.append('python-magic-bin')
@@ -43,5 +43,6 @@ setup(
         "Operating System :: Unix",
         "Operating System :: MacOS :: MacOS X",
         "Operating System :: Microsoft :: Windows"
-    ]
+    ],
+    include_package_data=True
 )

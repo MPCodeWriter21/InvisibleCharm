@@ -19,6 +19,10 @@ Using `Cython`, increased the speed of converting a file to an image and extract
 
 Auto release fixed.
 
+### 2.1.4
+
+`MANIFEST.in` added.
+
 
 Install InvisibleCharm
 ----------------------
