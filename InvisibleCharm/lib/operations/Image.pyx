@@ -10,7 +10,7 @@ from InvisibleCharm.lib.File import open_file as _open_file, save_file as _save_
     delete_source_file as _delete_source_file
 from InvisibleCharm.lib.data.Prepare import prepare_data as _prepare_data
 
-__all__ = ['to_image', 'from_image']
+__all__ = ['to_image', 'from_image', 'to_image_file', 'from_image_file']
 
 cdef int vm(int n):
     cdef float sqrt = n ** 0.5
@@ -50,9 +50,24 @@ cdef tuple calculate_size(bytes data, int mode):
     return data, width, height
 
 # Convert a file to an image
-cpdef void to_image(str source, str dest, delete_source, compress, str encrypt_pass=None, int mode=3):
+cpdef void to_image_file(str source, str dest, delete_source, compress, str encrypt_pass=None, int mode=3):
     # Reads and prepares the source file data
     cdef bytes data = _open_file(source, 'source', True, compress, encrypt_pass)
+
+    image = to_image(data, False)
+
+    # Saves image in the destination path
+    image.save(dest, format='png')
+    _logger.info(_gc("lg") + ' = Image saved.')
+
+    if delete_source:
+        # Removes Source file
+        _delete_source_file(source)
+
+# Convert data to an image
+cpdef to_image(bytes data, compress, str encrypt_pass=None, int mode=3):
+    # Reads and prepares the source file data
+    data = _prepare_data(data, True, compress, encrypt_pass)
 
     _logger.debug(_gc("ly") + ' * Calculating image size...', end='')
     # Calculates a suitable width and height for image
@@ -81,16 +96,10 @@ cpdef void to_image(str source, str dest, delete_source, compress, str encrypt_p
                 x += 4
     _logger.debug('\r' + _gc("lg") + ' = Pixels colored.')
 
-    # Saves image in the destination path
-    image.save(dest, format='png')
-    _logger.info(_gc("lg") + ' = Image saved.')
-
-    if delete_source:
-        # Removes Source file
-        _delete_source_file(source)
+    return image
 
 # Reads pixels and returns data
-cpdef read_pixels(image: _Image):
+cpdef bytes read_pixels(image: _Image.Image):
     _logger.debug(_gc("ly") + ' * Loading pixels...', end='')
     # Loads image pixel map
     pixel_map = image.load()
@@ -136,7 +145,7 @@ cpdef read_pixels(image: _Image):
     return data
 
 # Extract a file from an image pixels
-cpdef void from_image(str source, str dest, delete_source, compress, str encrypt_pass=None):
+cpdef void from_image_file(str source, str dest, delete_source, compress, str encrypt_pass=None):
     # Reads the image file
     _logger.debug(_gc("ly") + ' * Opening image...', end='')
     image = _Image.open(source)
@@ -154,3 +163,17 @@ cpdef void from_image(str source, str dest, delete_source, compress, str encrypt
     if delete_source:
         # Removes Source file
         _delete_source_file(source)
+
+# Extract data from an image pixels
+cpdef bytes from_image(image: _Image.Image, compress, str encrypt_pass=None):
+    # Checks input types
+    if not isinstance(image, _Image.Image):
+        raise TypeError('`image` must be an instance of PIL.Image.Image class!')
+
+    # Reads pixels and returns data
+    cdef bytes data = read_pixels(image)
+
+    # Prepares extracted data
+    data = _prepare_data(data, False, compress, encrypt_pass)
+
+    return data

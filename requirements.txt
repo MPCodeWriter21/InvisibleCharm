@@ -1,2 +1,6 @@
 setuptools
 Cython
+python-magic
+pycryptodome
+Pillow
+log21

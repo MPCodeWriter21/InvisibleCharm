@@ -3,25 +3,42 @@ InvisibleCharm
 
 InvisibleCharm is a python script that allows you to hide your files.
 
-Install Python
---------------
+Requirements
+------------
 
-Inorder to install Python, please visit [Python.org](https://Python.org/).
+- [Python 3.x](https://Python.org)
+- [Cython](https://cython.readthedocs.io/en/latest/src/quickstart/install.html)
+- [setuptools](https://pypi.org/project/setuptools/)
+- [log21](https://github.com/MPCodeWriter21/log21)
+- [pycryptodome](https://pycryptodome.readthedocs.io/en/latest/src/installation.html)
+- [Pillow](https://pillow.readthedocs.io/en/latest/installation.html)
+- [python-magic](https://pypi.org/project/python-magic/)
+
+*Note: You might need to install some of the requirements manually.*
 
 Changes
 -------
 
-### 2.1.0
+### 2.2.0
 
-Using `Cython`, increased the speed of converting a file to an image and extracting the file from the image.
+`to_image` and `from_image` renamed to `to_image_file` and `from_image_file`. New `to_image` and `from_image` functions
+use bytes and PIL.Image as input and output.
+
+`embed` and `extract` renamed to `embed_file` and `extract_file`. New `to_image` and `from_image` functions
+use bytes as input and output.
+
+### 2.1.4
+
+`MANIFEST.in` added.
 
 ### 2.1.1 - 2.1.3
 
 Auto release fixed.
 
-### 2.1.4
+### 2.1.0
 
-`MANIFEST.in` added.
+Using `Cython`, increased the speed of converting a file to an image and extracting the file from the image.
+
 
 
 Install InvisibleCharm

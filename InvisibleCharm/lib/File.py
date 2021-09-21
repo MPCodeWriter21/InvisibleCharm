@@ -6,7 +6,7 @@ import os as _os
 from subprocess import getoutput as _getoutput
 from log21 import get_colors as _gc
 from InvisibleCharm.lib.Console import logger as _logger
-from InvisibleCharm.lib.data.Prepare import prepare_data as _prepare_data
+from InvisibleCharm.lib.data.Prepare import prepare_data as _prepare_data, add_num as _add_num
 
 
 # Opens a file and returns prepared content
@@ -26,9 +26,9 @@ def save_file(path: str, data: bytes) -> None:
             dest_file.write(data)
     except PermissionError:
         _logger.info('\r' + _gc("lr") + ' ! Error: PermissionError: Save in path `' + path + '` failed!')
-        path = add_num(path)
+        path = _add_num(path)
         while _os.path.exists(path):
-            path = add_num(path)
+            path = _add_num(path)
         with open(path, 'wb') as dest_file:
             dest_file.write(data)
         _logger.info(_gc("lg") + ' = File saved in New Path: ' + path)

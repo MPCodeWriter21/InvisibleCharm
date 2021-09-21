@@ -7,8 +7,8 @@ from log21 import get_colors as gc
 from log21 import ColorizingArgumentParser
 from InvisibleCharm.Settings import banner, is_windows, operating_system
 from InvisibleCharm.lib.Console import logger, input, verbose, quiet, exit
-from InvisibleCharm.lib.operations import win_embed, win_extract, win_attrib_hide, win_attrib_reveal, to_image, \
-    from_image, embed, extract
+from InvisibleCharm.lib.operations import win_embed, win_extract, win_attrib_hide, win_attrib_reveal, to_image_file, \
+    from_image_file, embed_file, extract_file
 
 
 # Main function of script
@@ -107,12 +107,12 @@ def main():
             if args.cover:
                 logger.warn(gc("lr") + ' ! Warning: ' + gc("blm", "gr") +
                             "`to image` operation doesn't use cover file." + gc("rst"))
-            to_image(args.source, args.destination, args.delete, args.compress, args.encryption_pass, args.image_mode)
+            to_image_file(args.source, args.destination, args.delete, args.compress, args.encryption_pass, args.image_mode)
         elif args.embed:
             if not args.cover or not os.path.exists(args.cover) or not os.path.isfile(args.cover):
                 exit(gc("lr") + ' ! Error: Embed operation needs a cover file' +
                      '\n + Source file must be an existing file!')
-            embed(args.source, args.cover, args.destination, args.delete, args.compress, args.encryption_pass)
+            embed_file(args.source, args.cover, args.destination, args.delete, args.compress, args.encryption_pass)
     elif args.mode.lower() in ['reveal', 'r']:
         # Checks the chosen operation and calls the suitable function
         if args.cover:
@@ -133,9 +133,9 @@ def main():
                             "`win attrib` operation doesn't use destination file path." + gc("rst"))
             win_attrib_reveal(args.source)
         elif args.to_image:
-            from_image(args.source, args.destination, args.delete, args.compress, args.encryption_pass)
+            from_image_file(args.source, args.destination, args.delete, args.compress, args.encryption_pass)
         elif args.embed:
-            extract(args.source, args.destination, args.delete, args.compress, args.encryption_pass)
+            extract_file(args.source, args.destination, args.delete, args.compress, args.encryption_pass)
     else:
         exit(gc("lr") + f' ! Error: Mode: `{gc("lw")}{args.mode}{gc("lr")}` not found!')
 

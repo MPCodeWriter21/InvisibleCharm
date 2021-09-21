@@ -6,7 +6,7 @@ on:
       - "master"
 
 jobs:
-  pre-release:
+  pre-release-ubuntu:
     name: "Auto Release"
     runs-on: "ubuntu-latest"
 
@@ -22,11 +22,35 @@ jobs:
           pip install setuptools Cython
       - name: Build
         run: |
-          python setup.py sdist
+          python setup.py sdist bdist_wheel bdist_rpm
       - uses: "marvinpinto/action-automatic-releases@latest"
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: "latest"
+          automatic_release_tag: "latest-ubuntu"
+          title: "Auto Build"
+          files: |
+            dist/*
+  pre-release-windows:
+    name: "Auto Release"
+    runs-on: "windows-latest"
+
+    steps:
+      - uses: actions/checkout@master
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install setuptools Cython
+      - name: Build
+        run: |
+          python setup.py sdist bdist_wheel bdist_wininst
+      - uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: "latest-win"
           title: "Auto Build"
           files: |
             dist/*
