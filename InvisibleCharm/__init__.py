@@ -8,7 +8,9 @@ import InvisibleCharm.lib.File as File
 from log21 import get_colors as _gc
 from InvisibleCharm.lib.Console import exit as _exit
 
-__version__ = "2.2.0"
+__version__ = "2.3.0"
+__author__ = "CodeWriter21 (Mehrad Pooryoussof)"
+__github__ = "Https://GitHub.com/MPCodeWriter21/InvisibleCharm"
 
 
 def entry_point():

@@ -1,1 +1,1 @@
-include InvisibleCharm/lib/operations/image.pyx
+include InvisibleCharm/lib/operations/Image.pyx

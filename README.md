@@ -13,33 +13,9 @@ Requirements
 - [pycryptodome](https://pycryptodome.readthedocs.io/en/latest/src/installation.html)
 - [Pillow](https://pillow.readthedocs.io/en/latest/installation.html)
 - [python-magic](https://pypi.org/project/python-magic/)
+- [importlib_resources](https://pypi.org/project/importlib-resources/)
 
 *Note: You might need to install some of the requirements manually.*
-
-Changes
--------
-
-### 2.2.0
-
-`to_image` and `from_image` renamed to `to_image_file` and `from_image_file`. New `to_image` and `from_image` functions
-use bytes and PIL.Image as input and output.
-
-`embed` and `extract` renamed to `embed_file` and `extract_file`. New `to_image` and `from_image` functions
-use bytes as input and output.
-
-### 2.1.4
-
-`MANIFEST.in` added.
-
-### 2.1.1 - 2.1.3
-
-Auto release fixed.
-
-### 2.1.0
-
-Using `Cython`, increased the speed of converting a file to an image and extracting the file from the image.
-
-
 
 Install InvisibleCharm
 ----------------------
@@ -51,6 +27,11 @@ python -m pip install InvisibleCharm
 ```
 
 Or you can clone [the repository](https://github.com/MPCodeWriter21/InvisibleCharm) and run:
+
+```commandline
+git clone https://github.com/MPCodeWriter21/InvisibleCharm
+cd InvisibleCharm
+```
 
 ```commandline
 python setup.py install
@@ -87,6 +68,33 @@ optional arguments:
   --verbose, -v
   --quiet, -q
 ```
+
+Changes
+-------
+
+### 2.3.0
+
+Some exceptions handled and some comments added to the files.
+
+### 2.2.0
+
+`to_image` and `from_image` renamed to `to_image_file` and `from_image_file`. New `to_image` and `from_image` functions
+use bytes and PIL.Image as input and output.
+
+`embed` and `extract` renamed to `embed_file` and `extract_file`. New `to_image` and `from_image` functions use bytes as
+input and output.
+
+### 2.1.4
+
+`MANIFEST.in` added.
+
+### 2.1.1 - 2.1.3
+
+Auto release fixed.
+
+### 2.1.0
+
+Using `Cython`, increased the speed of converting a file to an image and extracting the file from the image.
 
 Examples
 --------

@@ -9,6 +9,9 @@ from InvisibleCharm.Settings import banner, is_windows, operating_system
 from InvisibleCharm.lib.Console import logger, input, verbose, quiet, exit
 from InvisibleCharm.lib.operations import win_embed, win_extract, win_attrib_hide, win_attrib_reveal, to_image_file, \
     from_image_file, embed_file, extract_file
+from InvisibleCharm.lib.Exceptions import CoverDataTypeNotFoundError, InvalidCoverDataTypeError, \
+    NoEmbeddedFileFoundError
+from InvisibleCharm.lib.File import get_names
 
 
 # Main function of script
@@ -107,12 +110,26 @@ def main():
             if args.cover:
                 logger.warn(gc("lr") + ' ! Warning: ' + gc("blm", "gr") +
                             "`to image` operation doesn't use cover file." + gc("rst"))
-            to_image_file(args.source, args.destination, args.delete, args.compress, args.encryption_pass, args.image_mode)
+            to_image_file(args.source, args.destination, args.delete, args.compress, args.encryption_pass,
+                          args.image_mode)
         elif args.embed:
             if not args.cover or not os.path.exists(args.cover) or not os.path.isfile(args.cover):
                 exit(gc("lr") + ' ! Error: Embed operation needs a cover file' +
                      '\n + Source file must be an existing file!')
-            embed_file(args.source, args.cover, args.destination, args.delete, args.compress, args.encryption_pass)
+            try:
+                embed_file(args.source, args.cover, args.destination, args.delete, args.compress, args.encryption_pass)
+            except CoverDataTypeNotFoundError:
+                confirm = input(gc("lr") + f" ! Error: Couldn't identify cover file type!\n" + gc("ly") +
+                                ' * Do you still want to use this cover file?' + gc("lw") + '(' + gc("ly") +
+                                f'Enter {gc("lm")}Y{gc("ly")} to confirm{gc("lw")}){gc("lr")}: '
+                                + gc("lg")).lower()
+                if confirm == 'y':
+                    embed_file(args.source, args.cover, args.destination, args.delete, args.compress,
+                               args.encryption_pass, True)
+                else:
+                    exit()
+            except InvalidCoverDataTypeError as ex:
+                exit('\r' + gc("lr") + " ! Error:", str(ex))
     elif args.mode.lower() in ['reveal', 'r']:
         # Checks the chosen operation and calls the suitable function
         if args.cover:
@@ -126,7 +143,22 @@ def main():
                         gc("ly") + f'Are you sure you want to remove source file({args.source})?(y/N) ' +
                         gc("lg"))
                 args.delete = answer == 'y'
-            win_extract(args.source, args.destination, args.delete, args.compress, args.encryption_pass)
+            # Gets the list of available embedded names in destination path
+            possible_names = get_names(args.source)
+            name = ''
+            if len(possible_names) == 0:
+                # Exits if no embedded file is available
+                exit(gc("lr") + f' ! Error: No win-embedded file found!')
+            elif len(possible_names) == 1:
+                # Choose the only embedded file automatically
+                name = possible_names[0]
+            else:
+                # Asks user to choose one of the embedded files
+                while name not in possible_names:
+                    logger.print(gc("lb") + 'Available names' + gc("lr") + ': ' + gc("lg") +
+                                 f'{gc("lr")}, {gc("lg")}'.join(possible_names))
+                    name = input(gc("ly") + f'Enter the name of embedded file' + gc("lr") + ': ' + gc("lg"))
+            win_extract(args.source, args.destination, args.delete, args.compress, name, args.encryption_pass)
         elif args.win_attrib:
             if args.destination:
                 logger.warn(gc("lr") + ' ! Warning: ' + gc("blm", "gr") +
@@ -135,7 +167,10 @@ def main():
         elif args.to_image:
             from_image_file(args.source, args.destination, args.delete, args.compress, args.encryption_pass)
         elif args.embed:
-            extract_file(args.source, args.destination, args.delete, args.compress, args.encryption_pass)
+            try:
+                extract_file(args.source, args.destination, args.delete, args.compress, args.encryption_pass)
+            except NoEmbeddedFileFoundError:
+                exit(gc("lr") + f' ! Error: No embedded file found!')
     else:
         exit(gc("lr") + f' ! Error: Mode: `{gc("lw")}{args.mode}{gc("lr")}` not found!')
 

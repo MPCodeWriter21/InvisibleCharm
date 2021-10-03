@@ -26,6 +26,13 @@ cdef int vm(int n):
 
 # Prepares data and calculate suitable width and height for image
 cdef tuple calculate_size(bytes data, int mode):
+    """
+    Prepares data and calculate suitable width and height for image.
+    
+    :param data: bytes
+    :param mode: int
+    :return: Tuple[bytes, int, int]
+    """
     data += b'\x21'
     cdef int length, width, height, tmp1, tmp2
     while True:
@@ -50,11 +57,22 @@ cdef tuple calculate_size(bytes data, int mode):
     return data, width, height
 
 # Convert a file to an image
-cpdef void to_image_file(str source, str dest, delete_source, compress, str encrypt_pass=None, int mode=3):
+cpdef void to_image_file(str source, str dest, delete_source, compress, str encrypt_pass='', int mode=3):
+    """
+    Convert a file to an image
+    
+    :param source: str: Source file path.
+    :param dest: str: Destination file path.
+    :param delete_source: bool: Do you want to delete the source file after the process?
+    :param compress: bool: Do you want to compress the source data?
+    :param encrypt_pass: str = '': A password for encrypting the file
+    :param mode: int = 3: Image mode. 3:RGB, 4:ARGB
+    :return: None
+    """
     # Reads and prepares the source file data
     cdef bytes data = _open_file(source, 'source', True, compress, encrypt_pass)
 
-    image = to_image(data, False)
+    image = to_image(data, False, mode=mode)
 
     # Saves image in the destination path
     image.save(dest, format='png')
@@ -65,7 +83,16 @@ cpdef void to_image_file(str source, str dest, delete_source, compress, str encr
         _delete_source_file(source)
 
 # Convert data to an image
-cpdef to_image(bytes data, compress, str encrypt_pass=None, int mode=3):
+cpdef to_image(bytes data, compress, str encrypt_pass='', int mode=3):
+    """
+    Convert data to an image
+    
+    :param data: bytes: Data to convert to an image
+    :param compress: bool: Do you want to compress the data?
+    :param encrypt_pass: str = '': A password for encrypting the file
+    :param mode: int = 3: Image mode. 3:RGB, 4:ARGB
+    :return: PIL.Image.Image
+    """
     # Reads and prepares the source file data
     data = _prepare_data(data, True, compress, encrypt_pass)
 
@@ -100,6 +127,12 @@ cpdef to_image(bytes data, compress, str encrypt_pass=None, int mode=3):
 
 # Reads pixels and returns data
 cpdef bytes read_pixels(image: _Image.Image):
+    """
+    Reads pixels and returns data
+    
+    :param image: PIL.Image.Image
+    :return: bytes: Extracted data
+    """
     _logger.debug(_gc("ly") + ' * Loading pixels...', end='')
     # Loads image pixel map
     pixel_map = image.load()
@@ -146,6 +179,16 @@ cpdef bytes read_pixels(image: _Image.Image):
 
 # Extract a file from an image pixels
 cpdef void from_image_file(str source, str dest, delete_source, compress, str encrypt_pass=None):
+    """
+    Convert a file to an image
+    
+    :param source: str: Source image file path.
+    :param dest: str: Destination file path.
+    :param delete_source: bool: Do you want to delete the source file after the process?
+    :param compress: bool: Do you want to decompress the source data?
+    :param encrypt_pass: str = '': A password for decrypting the file
+    :return: None
+    """
     # Reads the image file
     _logger.debug(_gc("ly") + ' * Opening image...', end='')
     image = _Image.open(source)
@@ -166,6 +209,14 @@ cpdef void from_image_file(str source, str dest, delete_source, compress, str en
 
 # Extract data from an image pixels
 cpdef bytes from_image(image: _Image.Image, compress, str encrypt_pass=None):
+    """
+    Convert data to an image
+    
+    :param image: PIL.Image.Image
+    :param compress: bool: Do you want to decompress the data?
+    :param encrypt_pass: str = '': A password for decrypting the file
+    :return: bytes
+    """
     # Checks input types
     if not isinstance(image, _Image.Image):
         raise TypeError('`image` must be an instance of PIL.Image.Image class!')
