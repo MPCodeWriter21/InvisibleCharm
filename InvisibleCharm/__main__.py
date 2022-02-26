@@ -4,6 +4,9 @@
 
 import os
 from getpass import getpass
+
+import PIL
+
 from Crypto.PublicKey import RSA
 from log21 import get_colors as gc, ColorizingArgumentParser
 
@@ -14,6 +17,26 @@ from InvisibleCharm.lib.operations import ntfs_embed, win_extract, win_attrib_hi
 from InvisibleCharm.lib.Exceptions import CoverDataTypeNotFoundError, InvalidCoverDataTypeError, \
     NoEmbeddedFileFoundError
 from InvisibleCharm.lib.File import get_names
+
+
+def generate_destination_path(source_path: str, extension: str = None):
+    """
+    Generates a destination path based on the source path.
+    :param source_path: The source path.
+    :param extension: The extension to use.
+    :return: The destination path.
+    """
+    directory = os.path.dirname(source_path)
+    name, ext = os.path.splitext(os.path.basename(source_path))
+    dest_path = os.path.join(directory, name + '{}' + (extension if extension is not None else ext))
+    number = ''
+    if os.path.exists(dest_path.format(number)):
+        i = 1
+        while os.path.exists(dest_path.format(str(i))):
+            i += 1
+        number = str(i)
+
+    return dest_path.format(number)
 
 
 # Main function of script
@@ -41,7 +64,7 @@ def main():
                         help=f'Sets the path of {gc("lg")}SOURCE{gc("rst")} file', required=True)
     parser.add_argument('--cover-file', '-c', action='store', type=str, dest='cover',
                         help=f'Sets the path of {gc("lg")}COVER{gc("rst")} file')
-    parser.add_argument('--dest-file', '-d', action='store', type=str, dest='destination',
+    parser.add_argument('--dest-file', '-d', '-o', action='store', type=str, dest='destination',
                         help=f'Sets the path of {gc("lg")}DESTINATION{gc("rst")} file')
     parser.add_argument('--delete-source', '-D', action='store_true', dest='delete',
                         help=gc("lr") + 'Deletes source file' + gc("rst"))
@@ -57,8 +80,9 @@ def main():
                         - Needs a path to a {gc("lg")}RSA private/public key' + gc("rst"))
     parser.add_argument('--rsa-key-passphrase', '-rsa-pass', action='store', type=str, dest='rsa_key_pass',
                         help=f'A passphrase to decrypt the input RSA private key.' + gc("rst"))
-    parser.add_argument('--verbose', '-v', action='store_true', dest='verbose')
-    parser.add_argument('--quiet', '-q', action='store_true', dest='quiet')
+    parser.add_argument('--verbose', '-v', action='store_true', dest='verbose',
+                        help=gc("lg") + 'Verbose mode' + gc("rst"))
+    parser.add_argument('--quiet', '-q', action='store_true', dest='quiet', help=gc("lg") + 'Quiet mode' + gc("rst"))
     args = parser.parse_args()
 
     # Prints banner
@@ -84,11 +108,20 @@ def main():
     if not args.source or not os.path.exists(args.source) or not os.path.isfile(args.source):
         exit(gc("lr") + f" ! Error: Couldn't find source file: {os.path.abspath(args.source)}" +
              f"\n + Source file must be an existing file!")
-    if (args.ntfs_embed or args.to_image or args.embed) and not args.destination:
-        exit(gc("lr") + " ! Error: You must set destination path for this operation. use: --dest-file/-d")
     if args.to_image and args.image_mode not in [3, 4]:
         exit(gc("lr") + f' ! Error: Image Mode: `{gc("lw")}{args.image_mode}{gc("lr")}` not found!\n' +
              f' + Valid values:{gc("lb")} 3{gc("lr")},{gc("lb")} 4')
+
+    if (args.ntfs_embed or args.to_image or args.embed) and not args.destination:
+        logger.warning(gc("lr") + " ! Warning: You should set destination path for this operation. use: --dest-file/-d")
+        logger.info(gc('ly') + " = Generating a destination path to save the output...")
+        if args.mode.lower() in ['hide', 'h']:
+            if args.to_image:
+                args.destination = generate_destination_path(args.source, '.png')
+            else:
+                args.destination = generate_destination_path(args.source)
+        elif args.mode.lower() in ['reveal', 'r']:
+            args.destination = generate_destination_path(args.source, '')
 
     if args.destination:
         # Makes sure that destination directory exists
@@ -102,6 +135,9 @@ def main():
     # Reads the RSA key file if given
     rsa_key = None
     if args.rsa_encryption_key:
+        if not os.path.exists(args.rsa_encryption_key):
+            exit(gc("lr") + f" ! Error: Couldn't find RSA key file: '{args.rsa_encryption_key}'" +
+                 f"\n + RSA key file must be an existing file!")
         with open(args.rsa_encryption_key, 'rb') as file:
             key = file.read()
             try:
@@ -209,8 +245,11 @@ def main():
                             "`win attrib` operation doesn't use destination file path." + gc("rst"))
             win_attrib_reveal(args.source)
         elif args.to_image:
-            from_image_file(args.source, args.destination, args.delete, args.compress, args.aes_encryption_pass,
-                            rsa_key)
+            try:
+                from_image_file(args.source, args.destination, args.delete, args.compress, args.aes_encryption_pass,
+                                rsa_key)
+            except PIL.UnidentifiedImageError:
+                exit(gc('lr') + "! Error: Couldn't identify image file type!")
         elif args.embed:
             try:
                 extract_file(args.source, args.destination, args.delete, args.compress, args.aes_encryption_pass,
