@@ -3,16 +3,18 @@
 
 import os as _os
 from log21 import get_colors as _gc
-from typing import Union as _Union, List as _List
+from Crypto.PublicKey import RSA as _RSA
 # We use getoutput function to get the output of a command
 from subprocess import getoutput as _getoutput
+from typing import Union as _Union, List as _List
+
 from InvisibleCharm.lib.Console import logger as _logger
 from InvisibleCharm.lib.data.Prepare import prepare_data as _prepare_data, add_num as _add_num
 
 
 # Opens a file and returns prepared content
 def open_file(path: str, name: str, hiding: bool = True, compress: bool = False,
-              encrypt_pass: _Union[str, bytes] = '') -> bytes:
+              aes_encrypt_pass: _Union[str, bytes] = '', rsa_encrypt_key: _RSA.RsaKey = None) -> bytes:
     """
     Gets a file path and a name and reads the contents of the file and prepares it using
     InvisibleCharm.lib.data.Prepare.prepare_data function.
@@ -21,7 +23,9 @@ def open_file(path: str, name: str, hiding: bool = True, compress: bool = False,
     :param name: str: A name to use for debug messages
     :param hiding: bool = True: Are you going to hide this file?
     :param compress: bool = False: Do you want to compress this file?
-    :param encrypt_pass: Union[str, bytes] = '': A password for encrypting the file
+    :param aes_encrypt_pass: Union[str, bytes] = '': A password for encrypting the file
+    :param rsa_encrypt_key: Crypto.PublicKey.RSA.RsaKey: A public key or a private key for encrypting or decrypting the
+        data.
     :return: bytes: Prepared data
     """
 
@@ -30,15 +34,17 @@ def open_file(path: str, name: str, hiding: bool = True, compress: bool = False,
         raise TypeError('`path` must be an instance of str.')
     if not _os.path.exists(path):
         raise FileNotFoundError('`path` must be an existing file path.')
-    if not isinstance(encrypt_pass, (str, bytes)) and encrypt_pass:
+    if not isinstance(aes_encrypt_pass, (str, bytes)) and aes_encrypt_pass:
         raise TypeError('`encrypt_pass` must be an instance of str or bytes.')
+    if not isinstance(rsa_encrypt_key, _RSA.RsaKey) and rsa_encrypt_key:
+        raise TypeError('`rsa_encrypt_key` must be an instance of Crypto.PublicKey.RSA.RsaKey.')
 
     name = str(name)
     _logger.debug(_gc("ly") + f' * Reading {name.lower()} file...', end='')
     with open(path, 'rb') as file:
         data = file.read()
     _logger.debug('\r' + _gc("lg") + f' = {name.capitalize()} file opened.')
-    return _prepare_data(data, hiding, compress, encrypt_pass)
+    return _prepare_data(data, hiding, compress, aes_encrypt_pass, rsa_encrypt_key)
 
 
 # Writes data in the given path

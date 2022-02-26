@@ -5,19 +5,20 @@
 import os as _os
 from typing import Union as _Union
 from log21 import get_colors as _gc
+from Crypto.PublicKey import RSA as _RSA
 from InvisibleCharm.lib.Console import logger as _logger, input, exit
 from InvisibleCharm.lib.data.Prepare import add_num as _add_num
 from InvisibleCharm.lib.File import get_names as _get_names, open_file as _open_file, save_file as _save_file, \
     delete_source_file as _delete_source_file
-from InvisibleCharm.lib.Exceptions import WinEmbeddedFileNotFoundError as _WinEmbeddedFileFoundError, \
+from InvisibleCharm.lib.Exceptions import WinEmbeddedFileNotFoundError as _WinEmbeddedFileNotFoundError, \
     NoWinEmbeddedFileFoundError as _NoWinEmbeddedFileFoundError
 
-__all__ = ['win_embed', 'win_extract', 'win_attrib_hide', 'win_attrib_reveal']
+__all__ = ['ntfs_embed', 'win_extract', 'win_attrib_hide', 'win_attrib_reveal']
 
 
 # Hides a file in another Windows file
-def win_embed(source: str, dest: str, delete_source: bool, compress: bool, cover: str = None,
-              encrypt_pass: _Union[str, bytes] = '') -> None:
+def ntfs_embed(source: str, dest: str, delete_source: bool, compress: bool, cover: str = None,
+               encrypt_pass: _Union[str, bytes] = '', rsa_encrypt_key: _RSA.RsaKey = None) -> None:
     """
     Hides a file in another Windows file.
 
@@ -27,6 +28,8 @@ def win_embed(source: str, dest: str, delete_source: bool, compress: bool, cover
     :param compress: bool: Do you want to compress the source data?
     :param cover: str: Cover file path.
     :param encrypt_pass: Union[str, bytes] = '': A password for encrypting the file
+    :param rsa_encrypt_key: Crypto.PublicKey.RSA.RsaKey: A public key or a private key for encrypting or decrypting the
+        data.
     :return: None
     """
 
@@ -85,7 +88,7 @@ def win_embed(source: str, dest: str, delete_source: bool, compress: bool, cover
     _logger.debug('\r' + _gc("lg") + ' = File is ready.')
 
     # Reads and prepares the source data
-    data = _open_file(source, 'source', True, compress, encrypt_pass)
+    data = _open_file(source, 'source', True, compress, encrypt_pass, rsa_encrypt_key)
 
     # Saves the prepared data
     _save_file(dest + ':' + name, data)
@@ -97,7 +100,7 @@ def win_embed(source: str, dest: str, delete_source: bool, compress: bool, cover
 
 # Extracts a hidden file from a file in windows
 def win_extract(source: str, dest: str, delete_source: bool, compress: bool, name: str = '',
-                encrypt_pass: _Union[str, bytes] = '') -> None:
+                encrypt_pass: _Union[str, bytes] = '', rsa_encrypt_key: _RSA.RsaKey = None) -> None:
     """
     Extracts a hidden file from a file in Windows.
 
@@ -107,6 +110,8 @@ def win_extract(source: str, dest: str, delete_source: bool, compress: bool, nam
     :param compress: bool: Do you want to decompress the source data?
     :param name: str = '': The name of the embedded file to extract(Automatically finds if the
     :param encrypt_pass: Union[str, bytes] = '': A password for decrypting the file
+    :param rsa_encrypt_key: Crypto.PublicKey.RSA.RsaKey: A public key or a private key for encrypting or decrypting the
+        data.
     :return: None
     """
 
@@ -133,7 +138,7 @@ def win_extract(source: str, dest: str, delete_source: bool, compress: bool, nam
         raise _WinEmbeddedFileNotFoundError(f"There is no win-embedded file in '{source}' with name: '{name}'")
 
     # Reads and prepares data
-    data = _open_file(source + ':' + name, 'source', False, compress, encrypt_pass)
+    data = _open_file(source + ':' + name, 'source', False, compress, encrypt_pass, rsa_encrypt_key)
 
     # Saves the prepared data in the destination path
     _save_file(dest, data)

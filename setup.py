@@ -2,14 +2,6 @@
 # setup.py
 import os
 from setuptools import setup, find_packages, Extension
-from distutils.command.build import build
-
-
-class Build(build):
-    def finalize_options(self):
-        super().finalize_options()
-        from Cython.Build import cythonize
-        self.distribution.ext_modules = cythonize(self.distribution.ext_modules)
 
 
 with open('README.md', 'r') as file:
@@ -19,10 +11,10 @@ with open('LICENSE.txt', 'r') as file:
     LICENSE = file.read()
 
 DESCRIPTION = 'InvisibleCharm is a python script that allows you to hide your files.'
-VERSION = '2.3.0'
-REQUIREMENTS = ['log21', 'Pillow', 'pycryptodome', 'importlib_resources']
+VERSION = '2.4.0'
+REQUIREMENTS = ['log21>=1.5.1', 'Pillow>=8.3.2', 'pycryptodome>=3.12.0', 'importlib_resources>=5.2.2']
 if os.name == 'nt':
-    REQUIREMENTS.append('python-magic-bin')
+    REQUIREMENTS.append('python-magic-bin>=0.4.14')
 else:
     REQUIREMENTS.append('python-magic')
 
@@ -36,7 +28,7 @@ setup(
     description=DESCRIPTION,
     long_description=LONG_DESCRIPTION,
     long_description_content_type='text/markdown',
-    setup_requires=["cython"],
+    setup_requires=["cython>=0.29.24"],
     install_requires=REQUIREMENTS,
     packages=find_packages(),
     entry_points={
@@ -53,6 +45,5 @@ setup(
         "Operating System :: MacOS :: MacOS X",
         "Operating System :: Microsoft :: Windows"
     ],
-    include_package_data=True,
-    cmdclass={"build": Build}
+    include_package_data=True
 )

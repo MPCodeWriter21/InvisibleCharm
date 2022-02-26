@@ -57,7 +57,8 @@ cdef tuple calculate_size(bytes data, int mode):
     return data, width, height
 
 # Convert a file to an image
-cpdef void to_image_file(str source, str dest, delete_source, compress, str encrypt_pass='', int mode=3):
+cpdef void to_image_file(str source, str dest, delete_source, compress, str encrypt_pass='', rsa_encrypt_key=None,
+                         int mode=3):
     """
     Convert a file to an image
     
@@ -66,11 +67,13 @@ cpdef void to_image_file(str source, str dest, delete_source, compress, str encr
     :param delete_source: bool: Do you want to delete the source file after the process?
     :param compress: bool: Do you want to compress the source data?
     :param encrypt_pass: str = '': A password for encrypting the file
+    :param rsa_encrypt_key: Crypto.PublicKey.RSA.RsaKey: A public key or a private key for encrypting or decrypting the 
+        data.
     :param mode: int = 3: Image mode. 3:RGB, 4:ARGB
     :return: None
     """
     # Reads and prepares the source file data
-    cdef bytes data = _open_file(source, 'source', True, compress, encrypt_pass)
+    cdef bytes data = _open_file(source, 'source', True, compress, encrypt_pass, rsa_encrypt_key)
 
     image = to_image(data, False, mode=mode)
 
@@ -83,18 +86,20 @@ cpdef void to_image_file(str source, str dest, delete_source, compress, str encr
         _delete_source_file(source)
 
 # Convert data to an image
-cpdef to_image(bytes data, compress, str encrypt_pass='', int mode=3):
+cpdef to_image(bytes data, compress, str encrypt_pass='', rsa_encrypt_key=None, int mode=3):
     """
     Convert data to an image
     
     :param data: bytes: Data to convert to an image
     :param compress: bool: Do you want to compress the data?
     :param encrypt_pass: str = '': A password for encrypting the file
+    :param rsa_encrypt_key: Crypto.PublicKey.RSA.RsaKey: A public key or a private key for encrypting or decrypting the 
+        data.
     :param mode: int = 3: Image mode. 3:RGB, 4:ARGB
     :return: PIL.Image.Image
     """
     # Reads and prepares the source file data
-    data = _prepare_data(data, True, compress, encrypt_pass)
+    data = _prepare_data(data, True, compress, encrypt_pass, rsa_encrypt_key)
 
     _logger.debug(_gc("ly") + ' * Calculating image size...', end='')
     # Calculates a suitable width and height for image
@@ -178,7 +183,7 @@ cpdef bytes read_pixels(image: _Image.Image):
     return data
 
 # Extract a file from an image pixels
-cpdef void from_image_file(str source, str dest, delete_source, compress, str encrypt_pass=None):
+cpdef void from_image_file(str source, str dest, delete_source, compress, str encrypt_pass=None, rsa_encrypt_key=None):
     """
     Convert a file to an image
     
@@ -187,6 +192,8 @@ cpdef void from_image_file(str source, str dest, delete_source, compress, str en
     :param delete_source: bool: Do you want to delete the source file after the process?
     :param compress: bool: Do you want to decompress the source data?
     :param encrypt_pass: str = '': A password for decrypting the file
+    :param rsa_encrypt_key: Crypto.PublicKey.RSA.RsaKey: A public key or a private key for encrypting or decrypting the 
+        data.
     :return: None
     """
     # Reads the image file
@@ -198,7 +205,7 @@ cpdef void from_image_file(str source, str dest, delete_source, compress, str en
     cdef bytes data = read_pixels(image)
 
     # Prepares extracted data
-    data = _prepare_data(data, False, compress, encrypt_pass)
+    data = _prepare_data(data, False, compress, encrypt_pass, rsa_encrypt_key)
 
     # Saves the data in the destination path
     _save_file(dest, data)
@@ -208,13 +215,15 @@ cpdef void from_image_file(str source, str dest, delete_source, compress, str en
         _delete_source_file(source)
 
 # Extract data from an image pixels
-cpdef bytes from_image(image: _Image.Image, compress, str encrypt_pass=None):
+cpdef bytes from_image(image: _Image.Image, compress, str encrypt_pass=None, rsa_encrypt_key=None):
     """
     Convert data to an image
     
     :param image: PIL.Image.Image
     :param compress: bool: Do you want to decompress the data?
     :param encrypt_pass: str = '': A password for decrypting the file
+    :param rsa_encrypt_key: Crypto.PublicKey.RSA.RsaKey: A public key or a private key for encrypting or decrypting the 
+        data.
     :return: bytes
     """
     # Checks input types
@@ -225,6 +234,6 @@ cpdef bytes from_image(image: _Image.Image, compress, str encrypt_pass=None):
     cdef bytes data = read_pixels(image)
 
     # Prepares extracted data
-    data = _prepare_data(data, False, compress, encrypt_pass)
+    data = _prepare_data(data, False, compress, encrypt_pass, rsa_encrypt_key)
 
     return data

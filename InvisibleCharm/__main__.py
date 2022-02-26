@@ -3,11 +3,13 @@
 # CodeWriter21
 
 import os
-from log21 import get_colors as gc
-from log21 import ColorizingArgumentParser
+from getpass import getpass
+from Crypto.PublicKey import RSA
+from log21 import get_colors as gc, ColorizingArgumentParser
+
 from InvisibleCharm.Settings import banner, is_windows, operating_system
 from InvisibleCharm.lib.Console import logger, input, verbose, quiet, exit
-from InvisibleCharm.lib.operations import win_embed, win_extract, win_attrib_hide, win_attrib_reveal, to_image_file, \
+from InvisibleCharm.lib.operations import ntfs_embed, win_extract, win_attrib_hide, win_attrib_reveal, to_image_file, \
     from_image_file, embed_file, extract_file
 from InvisibleCharm.lib.Exceptions import CoverDataTypeNotFoundError, InvalidCoverDataTypeError, \
     NoEmbeddedFileFoundError
@@ -23,9 +25,9 @@ def main():
     parser.add_argument('mode', action='store', type=str, choices=['hide', 'reveal', 'h', 'r'],
                         help=f'{gc("lb")}modes{gc("lr")}:{gc("lg")} hide{gc("lr")},{gc("lg")} reveal' +
                              gc("rst"))
-    parser.add_argument('--win-embed', '-we', action='store_true', dest='win_embed',
+    parser.add_argument('--ntfs-embed', '-we', action='store_true', dest='ntfs_embed',
                         help=f'{gc("lg")}Embed files invisibly{gc("lw")}\
-                            ({gc("ly")}Only works on Windows{gc("lw")})' + gc("rst"))
+                            ({gc("ly")}Only works on NTFS file system{gc("lw")})' + gc("rst"))
     parser.add_argument('--win-attribute', '-wa', action='store_true', dest='win_attrib',
                         help=gc("lg") + 'Change windows attributes to hide file' + gc("rst"))
     parser.add_argument('--embed', '-e', action='store_true', dest='embed', help='')
@@ -44,9 +46,17 @@ def main():
     parser.add_argument('--delete-source', '-D', action='store_true', dest='delete',
                         help=gc("lr") + 'Deletes source file' + gc("rst"))
     parser.add_argument('--compress', '-C', action='store_true', dest='compress')
-    parser.add_argument('--encrypt', '-E', action='store', type=str, dest='encryption_pass',
-                        help=f'Enables {gc("lb")}encryption{gc("rst")} \
-                        - needs an {gc("lg")}ENCRYPTION_PASSword' + gc("rst"))
+    parser.add_argument('--encrypt-aes', '-aes', action='store_true', dest='aes_encryption',
+                        help=f'Enables {gc("lb")}AES encryption{gc("rst")} \
+                        - Asks for an {gc("lg")}ENCRYPTION_PASSword' + gc("rst"))
+    parser.add_argument('--encrypt-aes-pass', '-aes-pass', action='store', type=str, dest='aes_encryption_pass',
+                        help=f'Enables {gc("lb")}AES encryption{gc("rst")} \
+                        - Needs an {gc("lg")}ENCRYPTION_PASSword' + gc("rst"))
+    parser.add_argument('--encrypt-rsa', '-rsa', action='store', type=str, dest='rsa_encryption_key',
+                        help=f'Enables {gc("lb")}RSA encryption{gc("rst")} \
+                        - Needs a path to a {gc("lg")}RSA private/public key' + gc("rst"))
+    parser.add_argument('--rsa-key-passphrase', '-rsa-pass', action='store', type=str, dest='rsa_key_pass',
+                        help=f'A passphrase to decrypt the input RSA private key.' + gc("rst"))
     parser.add_argument('--verbose', '-v', action='store_true', dest='verbose')
     parser.add_argument('--quiet', '-q', action='store_true', dest='quiet')
     args = parser.parse_args()
@@ -61,20 +71,20 @@ def main():
         quiet()
 
     # Checks for switches to be suitable
-    if not (args.win_embed or args.win_attrib or args.embed or args.to_image):
+    if not (args.ntfs_embed or args.win_attrib or args.embed or args.to_image):
         exit(gc("lr") + ' ! Error: No operation chosen\n + Please choose an operation like embed!')
-    if not is_windows and (args.win_embed or args.win_attrib):
+    if not is_windows and (args.ntfs_embed or args.win_attrib):
         exit(gc("lr") + f" ! Error: You can't use windows-only options in {operating_system}")
-    if args.embed and args.win_embed:
+    if args.embed and args.ntfs_embed:
         exit(gc("lr") + " ! Error: You can't use embed and win-embed at the same time!")
     if args.to_image and args.embed:
         exit(gc("lr") + " ! Error: You can't use embed and to-image at the same time!")
-    if args.to_image and args.win_embed:
+    if args.to_image and args.ntfs_embed:
         exit(gc("lr") + " ! Error: You can't use win-embed and to-image at the same time!")
     if not args.source or not os.path.exists(args.source) or not os.path.isfile(args.source):
         exit(gc("lr") + f" ! Error: Couldn't find source file: {os.path.abspath(args.source)}" +
              f"\n + Source file must be an existing file!")
-    if (args.win_embed or args.to_image or args.embed) and not args.destination:
+    if (args.ntfs_embed or args.to_image or args.embed) and not args.destination:
         exit(gc("lr") + " ! Error: You must set destination path for this operation. use: --dest-file/-d")
     if args.to_image and args.image_mode not in [3, 4]:
         exit(gc("lr") + f' ! Error: Image Mode: `{gc("lw")}{args.image_mode}{gc("lr")}` not found!\n' +
@@ -82,20 +92,52 @@ def main():
 
     if args.destination:
         # Makes sure that destination directory exists
-        try:
-            if os.path.split(args.destination)[0]:
-                os.makedirs(os.path.split(args.destination)[0])
-        except FileExistsError:
-            pass
+        if os.path.split(args.destination)[0]:
+            os.makedirs(os.path.split(args.destination)[0], exist_ok=True)
+
+    # Takes a password from user if encryption is enabled and no password is given
+    if args.aes_encryption and not args.aes_encryption_pass:
+        args.aes_encryption_pass = getpass(" * Enter a password for AES encryption: ")
+
+    # Reads the RSA key file if given
+    rsa_key = None
+    if args.rsa_encryption_key:
+        with open(args.rsa_encryption_key, 'rb') as file:
+            key = file.read()
+            try:
+                rsa_key = RSA.import_key(key, args.rsa_key_pass)
+            except ValueError:
+                logger.error(gc('lr') + ' ! Error: Input key is unsupported or password protected!')
+                password = getpass(" * Enter the password of the encrypted key: ")
+                if password:
+                    try:
+                        rsa_key = RSA.import_key(key, password)
+                    except ValueError:
+                        logger.error(gc('lr') + ' ! Error: Input key is unsupported or the password is wrong!')
+                        exit()
+                else:
+                    exit()
+
+    if args.mode.lower() in ['hide', 'h'] and rsa_key and rsa_key.has_private():
+        logger.warn(gc('lr') + ' ! Warning: The input RSA key is a private key!')
+        if input(gc('ly') + f'Are you sure you want to encrypt the data using a private key?'
+                            f'({gc("r")}y{gc("lr")}/{gc("lg")}N{gc("ly")}) {gc("lc")}').lower() == 'n':
+            exit()
+
+    if args.mode.lower() in ['reveal', 'r'] and rsa_key and not rsa_key.has_private():
+        logger.error(gc('lr') + ' ! Error: The input RSA key is a not private key!')
+        logger.info(gc('c') + 'You must use a private key for decryption!')
+        exit()
 
     # Checks the chosen mode
     if args.mode.lower() in ['hide', 'h']:
         # Checks the chosen operation and calls the suitable function
-        if args.win_embed:
+        if args.ntfs_embed:
             if not args.cover and not os.path.exists(args.destination):
                 logger.warn(gc("lr") + ' ! Warning: ' + gc("blm", "gr") +
                             'You could add a cover file using --cover-file/-c switches.' + gc("rst"))
-            win_embed(args.source, args.destination, args.delete, args.compress, args.cover, args.encryption_pass)
+            ntfs_embed(args.source, args.destination, args.delete, args.compress, args.cover, args.aes_encryption_pass,
+                       rsa_key)
             if args.win_attrib:
                 win_attrib_hide(args.destination)
         elif args.win_attrib:
@@ -110,14 +152,15 @@ def main():
             if args.cover:
                 logger.warn(gc("lr") + ' ! Warning: ' + gc("blm", "gr") +
                             "`to image` operation doesn't use cover file." + gc("rst"))
-            to_image_file(args.source, args.destination, args.delete, args.compress, args.encryption_pass,
+            to_image_file(args.source, args.destination, args.delete, args.compress, args.aes_encryption_pass, rsa_key,
                           args.image_mode)
         elif args.embed:
             if not args.cover or not os.path.exists(args.cover) or not os.path.isfile(args.cover):
                 exit(gc("lr") + ' ! Error: Embed operation needs a cover file' +
                      '\n + Source file must be an existing file!')
             try:
-                embed_file(args.source, args.cover, args.destination, args.delete, args.compress, args.encryption_pass)
+                embed_file(args.source, args.cover, args.destination, args.delete, args.compress,
+                           args.aes_encryption_pass, rsa_key)
             except CoverDataTypeNotFoundError:
                 confirm = input(gc("lr") + f" ! Error: Couldn't identify cover file type!\n" + gc("ly") +
                                 ' * Do you still want to use this cover file?' + gc("lw") + '(' + gc("ly") +
@@ -125,7 +168,7 @@ def main():
                                 + gc("lg")).lower()
                 if confirm == 'y':
                     embed_file(args.source, args.cover, args.destination, args.delete, args.compress,
-                               args.encryption_pass, True)
+                               args.aes_encryption_pass, rsa_key, True)
                 else:
                     exit()
             except InvalidCoverDataTypeError as ex:
@@ -135,7 +178,7 @@ def main():
         if args.cover:
             logger.warn(gc("lr") + ' ! Warning: ' + gc("blm", "gr") +
                         "`reveal` operations don't use cover file." + gc("rst"))
-        if args.win_embed:
+        if args.ntfs_embed:
             if args.delete:
                 answer = ''
                 while answer != 'y' and answer != 'n':
@@ -158,17 +201,20 @@ def main():
                     logger.print(gc("lb") + 'Available names' + gc("lr") + ': ' + gc("lg") +
                                  f'{gc("lr")}, {gc("lg")}'.join(possible_names))
                     name = input(gc("ly") + f'Enter the name of embedded file' + gc("lr") + ': ' + gc("lg"))
-            win_extract(args.source, args.destination, args.delete, args.compress, name, args.encryption_pass)
+            win_extract(args.source, args.destination, args.delete, args.compress, name, args.aes_encryption_pass,
+                        rsa_key)
         elif args.win_attrib:
             if args.destination:
                 logger.warn(gc("lr") + ' ! Warning: ' + gc("blm", "gr") +
                             "`win attrib` operation doesn't use destination file path." + gc("rst"))
             win_attrib_reveal(args.source)
         elif args.to_image:
-            from_image_file(args.source, args.destination, args.delete, args.compress, args.encryption_pass)
+            from_image_file(args.source, args.destination, args.delete, args.compress, args.aes_encryption_pass,
+                            rsa_key)
         elif args.embed:
             try:
-                extract_file(args.source, args.destination, args.delete, args.compress, args.encryption_pass)
+                extract_file(args.source, args.destination, args.delete, args.compress, args.aes_encryption_pass,
+                             rsa_key)
             except NoEmbeddedFileFoundError:
                 exit(gc("lr") + f' ! Error: No embedded file found!')
     else:

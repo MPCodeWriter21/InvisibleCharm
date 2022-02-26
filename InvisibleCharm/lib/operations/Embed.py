@@ -9,9 +9,11 @@ import magic as _magic
 import zipfile as _zipfile
 from typing import Union as _Union
 from log21 import get_colors as _gc
+from Crypto.PublicKey import RSA as _RSA
+
 from InvisibleCharm.lib.data.Prepare import add_num as _add_num
 from InvisibleCharm.Settings import embed_capable as _embed_capable
-from InvisibleCharm.lib.Console import logger as _logger, input, exit
+from InvisibleCharm.lib.Console import logger as _logger
 from InvisibleCharm.lib.File import open_file as _open_file, save_file as _save_file, \
     delete_source_file as _delete_source_file
 from InvisibleCharm.lib.data.Prepare import prepare_data as _prepare_data
@@ -24,7 +26,8 @@ __all__ = ['embed_file', 'extract_file', 'embed', 'extract']
 
 # Embeds a file in a cover
 def embed_file(source: str, cover: str, dest: str, delete_source: bool, compress: bool,
-               encrypt_pass: _Union[str, bytes] = '', force_use_cover: bool = False) -> None:
+               encrypt_pass: _Union[str, bytes] = '', rsa_encrypt_key: _RSA.RsaKey = None,
+               force_use_cover: bool = False) -> None:
     """
     Embeds a file in a cover
 
@@ -34,6 +37,8 @@ def embed_file(source: str, cover: str, dest: str, delete_source: bool, compress
     :param delete_source: bool: Do you want to delete the source file after embed process?
     :param compress: bool: Do you want to compress the source data?
     :param encrypt_pass: Union[str, bytes] = '': A password for encrypting the file
+    :param rsa_encrypt_key: Crypto.PublicKey.RSA.RsaKey: A public key or a private key for encrypting or decrypting the
+        data.
     :param force_use_cover: bool = False: Use this cover data without raising any exceptions.
     :return: None
     """
@@ -53,7 +58,7 @@ def embed_file(source: str, cover: str, dest: str, delete_source: bool, compress
         raise TypeError('`encrypt_pass` must be an instance of str or bytes.')
 
     # Reads and prepares source data
-    source_data = _open_file(source, 'source', True, compress, encrypt_pass)
+    source_data = _open_file(source, 'source', True, compress, encrypt_pass, rsa_encrypt_key)
 
     # Reads cover file content
     cover_data = _open_file(cover, 'cover')
@@ -70,7 +75,8 @@ def embed_file(source: str, cover: str, dest: str, delete_source: bool, compress
 
 # Embeds data in a cover
 def embed(source_data: _Union[str, bytes], cover: _Union[str, bytes], compress: bool,
-          encrypt_pass: _Union[str, bytes] = '', force_use_cover: bool = False) -> bytes:
+          encrypt_pass: _Union[str, bytes] = '', rsa_encrypt_key: _RSA.RsaKey = None,
+          force_use_cover: bool = False) -> bytes:
     """
     Embeds data in a cover
 
@@ -78,6 +84,8 @@ def embed(source_data: _Union[str, bytes], cover: _Union[str, bytes], compress: 
     :param cover: bytes: Cover data.
     :param compress: bool: Do you want to compress the source data?
     :param encrypt_pass: Union[str, bytes] = '': A password for encrypting the file
+    :param rsa_encrypt_key: Crypto.PublicKey.RSA.RsaKey: A public key or a private key for encrypting or decrypting the
+        data.
     :param force_use_cover: bool = False: Use this cover data without raising any exceptions.
     :return: bytes: Embedded data
     """
@@ -95,7 +103,7 @@ def embed(source_data: _Union[str, bytes], cover: _Union[str, bytes], compress: 
         raise TypeError('`encrypt_pass` must be an instance of str or bytes.')
 
     # Prepares the data
-    source_data = _prepare_data(source_data, True, compress, encrypt_pass)
+    source_data = _prepare_data(source_data, True, compress, encrypt_pass, rsa_encrypt_key)
 
     if not force_use_cover:
         _logger.debug(_gc("ly") + ' * Checking cover file type...', end='')
@@ -143,7 +151,7 @@ def embed(source_data: _Union[str, bytes], cover: _Union[str, bytes], compress: 
 
 # Extracts a file from an embedded file
 def extract_file(source: str, dest: str, delete_source: bool, compress: bool,
-                 encrypt_pass: _Union[str, bytes] = '') -> None:
+                 encrypt_pass: _Union[str, bytes] = '', rsa_encrypt_key: _RSA.RsaKey = None) -> None:
     """
     Embeds a file in a cover
 
@@ -152,6 +160,8 @@ def extract_file(source: str, dest: str, delete_source: bool, compress: bool,
     :param delete_source: bool: Do you want to delete the source file after embed process?
     :param compress: bool: Do you want to decompress the source data?
     :param encrypt_pass: Union[str, bytes] = '': A password for decrypting the file
+    :param rsa_encrypt_key: Crypto.PublicKey.RSA.RsaKey: A public key or a private key for encrypting or decrypting the
+        data.
     :return: None
     """
 
@@ -179,7 +189,7 @@ def extract_file(source: str, dest: str, delete_source: bool, compress: bool,
     _logger.debug('\r' + _gc("lg") + ' = Source file opened.')
 
     # Prepares the data
-    data = _prepare_data(data, False, compress, encrypt_pass)
+    data = _prepare_data(data, False, compress, encrypt_pass, rsa_encrypt_key)
 
     # Saves the extracted data in the destination path
     _save_file(dest, data)
@@ -190,13 +200,16 @@ def extract_file(source: str, dest: str, delete_source: bool, compress: bool,
 
 
 # Extracts data from an embedded data
-def extract(source_data: _Union[str, bytes], compress: bool, encrypt_pass: _Union[str, bytes] = '') -> bytes:
+def extract(source_data: _Union[str, bytes], compress: bool, encrypt_pass: _Union[str, bytes] = '',
+            rsa_encrypt_key: _RSA.RsaKey = None) -> bytes:
     """
     Extracts data from an embedded data
 
     :param source_data: : Union[str, bytes]: Data to extract.
     :param compress: bool: Do you want to decompress the source data?
     :param encrypt_pass: Union[str, bytes] = '': A password for decrypting the file
+    :param rsa_encrypt_key: Crypto.PublicKey.RSA.RsaKey: A public key or a private key for encrypting or decrypting the
+        data.
     :return: bytes: Extracted data
     """
 
@@ -230,6 +243,6 @@ def extract(source_data: _Union[str, bytes], compress: bool, encrypt_pass: _Unio
     _os.remove(archive_tmp_path)
 
     # Prepares the data
-    data = _prepare_data(data, False, compress, encrypt_pass)
+    data = _prepare_data(data, False, compress, encrypt_pass, rsa_encrypt_key)
 
     return data

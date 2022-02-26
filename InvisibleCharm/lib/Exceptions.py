@@ -21,7 +21,7 @@ class CoverDataTypeNotFoundError(InvalidCoverDataTypeError):
     pass
 
 
-class NoEmbeddedDataFoundError:
+class NoEmbeddedDataFoundError(Exception):
     pass
 
 

@@ -7,6 +7,8 @@ Requirements
 ------------
 
 - [Python 3.x](https://Python.org)
+- [Microsoft Visual C++ 14.0 or greater](https://visualstudio.microsoft.com/visual-cpp-build-tools/) (For Windows)
+- [python3-dev](https://openwrt.org/packages/pkgdata/python3-dev) (For Linux)
 - [Cython](https://cython.readthedocs.io/en/latest/src/quickstart/install.html)
 - [setuptools](https://pypi.org/project/setuptools/)
 - [log21](https://github.com/MPCodeWriter21/log21)
@@ -41,36 +43,56 @@ Usage
 -----
 
 ```
-usage: main.py [-h] [--win-embed] [--win-attribute] [--embed] [--to-image] --source-file SOURCE
-               [--cover-file COVER] [--dest-file DESTINATION] [--delete-source] [--compress]
-               [--encrypt ENCRYPTION_PASS] [--verbose] [--quiet]
-               mode
+usage: InvisibleCharm [-h] [--win-embed] [--win-attribute] [--embed] [--to-image] [--image-mode {
+                      3, 4 }] --source-file SOURCE [--cover-file COVER] [--dest-file DESTINATION]
+                      [--delete-source] [--compress] [--encrypt-aes] [--encrypt-aes-pass
+                      AES_ENCRYPTION_PASS] [--encrypt-rsa RSA_ENCRYPTION_KEY]
+                      [--rsa-key-passphrase RSA_KEY_PASS] [--verbose] [--quiet]
+                      { hide, reveal, h, r }
 
 positional arguments:
-  mode                  modes: Hide, Reveal
+  { hide, reveal, h, r }
+                        modes: hide, reveal
 
-optional arguments:
-  -h, --help            show this help message and exit
-  --win-embed, -we      Embed files invisibly (Only works on Windows)
-  --win-attribute, -wa  Change windows attributes to hide file (Only works on Windows)
+options:
+  -h, --help
+                        show this help message and exit
+  --win-embed, -we
+                        Embed files invisibly (Only works on Windows)
+  --win-attribute, -wa
+                        Change windows attributes to hide file
   --embed, -e
-  --to-image, -i        Converts a file into a png image
+  --to-image, -i
+                        Converts a file into a png image
+  --image-mode { 3, 4 }, -I { 3, 4 }
+                        Sets output image mode. Valid values: 3:RGB, 4:ARGB
   --source-file SOURCE, -s SOURCE
                         Sets the path of SOURCE file
   --cover-file COVER, -c COVER
                         Sets the path of COVER file
   --dest-file DESTINATION, -d DESTINATION
                         Sets the path of DESTINATION file
-  --delete-source, -D   Deletes source file
+  --delete-source, -D
+                        Deletes source file
   --compress, -C
-  --encrypt ENCRYPTION_PASS, -E ENCRYPTION_PASS
-                        Enables encryption - needs an ENCRYPTION_PASSword
+  --encrypt-aes, -aes
+                        Enables AES encryption - Asks for an ENCRYPTION_PASSword
+  --encrypt-aes-pass AES_ENCRYPTION_PASS, -aes-pass AES_ENCRYPTION_PASS
+                        Enables AES encryption - Needs an ENCRYPTION_PASSword
+  --encrypt-rsa RSA_ENCRYPTION_KEY, -rsa RSA_ENCRYPTION_KEY
+                        Enables RSA encryption - Needs a path to a RSA private/public key
+  --rsa-key-passphrase RSA_KEY_PASS, -rsa-pass RSA_KEY_PASS
+                        A passphrase to decrypt the input RSA private key.
   --verbose, -v
   --quiet, -q
 ```
 
 Changes
 -------
+
+### 2.4.0
+
+Added RSA encryption support
 
 ### 2.3.0
 
