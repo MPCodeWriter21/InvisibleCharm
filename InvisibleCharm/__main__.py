@@ -3,6 +3,7 @@
 # CodeWriter21
 
 import os
+
 from getpass import getpass
 
 import PIL
@@ -11,23 +12,42 @@ from Crypto.PublicKey import RSA
 from log21 import get_colors as gc, ColorizingArgumentParser
 
 from InvisibleCharm.Settings import banner, is_windows, operating_system
+from InvisibleCharm.lib.data.Encryption import encrypt_aes, decrypt_aes
 from InvisibleCharm.lib.Console import logger, input, verbose, quiet, exit
-from InvisibleCharm.lib.operations import ntfs_embed, win_extract, win_attrib_hide, win_attrib_reveal, to_image_file, \
+from InvisibleCharm.lib.operations import ntfs_embed, ntfs_extract, win_attrib_hide, win_attrib_reveal, to_image_file, \
     from_image_file, embed_file, extract_file
 from InvisibleCharm.lib.Exceptions import CoverDataTypeNotFoundError, InvalidCoverDataTypeError, \
     NoEmbeddedFileFoundError
 from InvisibleCharm.lib.File import get_names
 
 
-def generate_destination_path(source_path: str, extension: str = None):
+def generate_destination_path(source_path: str, extension: str = None, aes_pass: str = None, encrypt: bool = True):
     """
     Generates a destination path based on the source path.
     :param source_path: The source path.
     :param extension: The extension to use.
+    :param aes_pass: The AES password.
+    :param encrypt: Whether to encrypt or decrypt the file name.
     :return: The destination path.
     """
     directory = os.path.dirname(source_path)
     name, ext = os.path.splitext(os.path.basename(source_path))
+    if aes_pass:
+        try:
+            if encrypt:
+                name_ = bytes.hex(encrypt_aes(name, aes_pass))
+            else:
+                name_ = decrypt_aes(bytes.fromhex(name), aes_pass).decode()
+            with open(os.path.join(directory, name_ + 'tmp' + ext), 'x'):
+                pass
+            if os.path.exists(os.path.join(directory, name_ + 'tmp' + ext)):
+                os.remove(os.path.join(directory, name_ + 'tmp' + ext))
+            name = name_
+        except ValueError or OSError or FileNotFoundError:
+            logger.error(gc("red") + f" ! Error: Failed to {'encrypt' if encrypt else 'decrypt'} the file name." +
+                         gc("reset"))
+        except FileExistsError:
+            pass
     dest_path = os.path.join(directory, name + '{}' + (extension if extension is not None else ext))
     number = ''
     if os.path.exists(dest_path.format(number)):
@@ -112,17 +132,6 @@ def main():
         exit(gc("lr") + f' ! Error: Image Mode: `{gc("lw")}{args.image_mode}{gc("lr")}` not found!\n' +
              f' + Valid values:{gc("lb")} 3{gc("lr")},{gc("lb")} 4')
 
-    if (args.ntfs_embed or args.to_image or args.embed) and not args.destination:
-        logger.warning(gc("lr") + " ! Warning: You should set destination path for this operation. use: --dest-file/-d")
-        logger.info(gc('ly') + " = Generating a destination path to save the output...")
-        if args.mode.lower() in ['hide', 'h']:
-            if args.to_image:
-                args.destination = generate_destination_path(args.source, '.png')
-            else:
-                args.destination = generate_destination_path(args.source)
-        elif args.mode.lower() in ['reveal', 'r']:
-            args.destination = generate_destination_path(args.source, '')
-
     if args.destination:
         # Makes sure that destination directory exists
         if os.path.split(args.destination)[0]:
@@ -131,6 +140,20 @@ def main():
     # Takes a password from user if encryption is enabled and no password is given
     if args.aes_encryption and not args.aes_encryption_pass:
         args.aes_encryption_pass = getpass(" * Enter a password for AES encryption: ")
+
+    if (args.ntfs_embed or args.to_image or args.embed) and not args.destination:
+        logger.warning(gc("lr") + " ! Warning: You should set destination path for this operation. use: --dest-file/-d")
+        logger.info(gc('ly') + " = Generating a destination path to save the output...")
+        if args.mode.lower() in ['hide', 'h']:
+            if args.to_image:
+                args.destination = generate_destination_path(args.source, '.png',
+                                                             aes_pass=args.aes_encryption_pass or 'P@$$w0rd')
+            else:
+                args.destination = generate_destination_path(args.source,
+                                                             aes_pass=args.aes_encryption_pass or 'P@$$w0rd')
+        elif args.mode.lower() in ['reveal', 'r']:
+            args.destination = generate_destination_path(args.source, '',
+                                                         aes_pass=args.aes_encryption_pass or 'P@$$w0rd', encrypt=False)
 
     # Reads the RSA key file if given
     rsa_key = None
@@ -237,8 +260,8 @@ def main():
                     logger.print(gc("lb") + 'Available names' + gc("lr") + ': ' + gc("lg") +
                                  f'{gc("lr")}, {gc("lg")}'.join(possible_names))
                     name = input(gc("ly") + f'Enter the name of embedded file' + gc("lr") + ': ' + gc("lg"))
-            win_extract(args.source, args.destination, args.delete, args.compress, name, args.aes_encryption_pass,
-                        rsa_key)
+            ntfs_extract(args.source, args.destination, args.delete, args.compress, name, args.aes_encryption_pass,
+                         rsa_key)
         elif args.win_attrib:
             if args.destination:
                 logger.warn(gc("lr") + ' ! Warning: ' + gc("blm", "gr") +

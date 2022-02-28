@@ -13,7 +13,7 @@ from InvisibleCharm.lib.File import get_names as _get_names, open_file as _open_
 from InvisibleCharm.lib.Exceptions import WinEmbeddedFileNotFoundError as _WinEmbeddedFileNotFoundError, \
     NoWinEmbeddedFileFoundError as _NoWinEmbeddedFileFoundError
 
-__all__ = ['ntfs_embed', 'win_extract', 'win_attrib_hide', 'win_attrib_reveal']
+__all__ = ['ntfs_embed', 'ntfs_extract', 'win_attrib_hide', 'win_attrib_reveal']
 
 
 # Hides a file in another Windows file
@@ -99,8 +99,8 @@ def ntfs_embed(source: str, dest: str, delete_source: bool, compress: bool, cove
 
 
 # Extracts a hidden file from a file in windows
-def win_extract(source: str, dest: str, delete_source: bool, compress: bool, name: str = '',
-                encrypt_pass: _Union[str, bytes] = '', rsa_encrypt_key: _RSA.RsaKey = None) -> None:
+def ntfs_extract(source: str, dest: str, delete_source: bool, compress: bool, name: str = '',
+                 encrypt_pass: _Union[str, bytes] = '', rsa_encrypt_key: _RSA.RsaKey = None) -> None:
     """
     Extracts a hidden file from a file in Windows.
 

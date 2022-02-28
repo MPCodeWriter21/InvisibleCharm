@@ -1,6 +1,10 @@
 CHANGELOG
 =========
 
+### 2.4.2
+
+Encryption for auto generated names
+
 ### 2.4.1
 
 Added auto name generation for output files

@@ -92,9 +92,9 @@ options:
 Changes
 -------
 
-### 2.4.1
+### 2.4.2
 
-Added auto name generation for output files
+Encryption for auto generated names
 
 [Full Changelog](CHANGELOG.md)
 
